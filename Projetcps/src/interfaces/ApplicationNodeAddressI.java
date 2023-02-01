@@ -1,5 +1,5 @@
 package interfaces;
 
-public interface ApplicationNodeAddressI {
+public interface ApplicationNodeAddressI extends FacadeNodeAddressI,ContentManagementNodeAddressI{
 
 }
