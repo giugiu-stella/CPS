@@ -1,4 +1,4 @@
-package interfaces;
+package rep.facade;
 
 public interface PeerNodeAddressI {
 
