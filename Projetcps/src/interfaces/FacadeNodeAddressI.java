@@ -1,5 +1,5 @@
 package interfaces;
 
-public interface FacadeNodeAddressI {
-
+public interface FacadeNodeAddressI extends NodeAddressI{
+	public String getNodeManagementURI();
 }
