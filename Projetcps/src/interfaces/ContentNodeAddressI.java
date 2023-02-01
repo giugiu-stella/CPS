@@ -1,5 +1,5 @@
 package interfaces;
 
-public interface ContentNodeAddressI {
+public interface ContentNodeAddressI extends PeerNodeAddressI,ContentManagementNodeAddressI{
 
 }
