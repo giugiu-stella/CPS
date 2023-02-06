@@ -1,0 +1,38 @@
+package boundPort;
+
+import java.util.Set;
+
+import fr.sorbonne_u.components.ComponentI;
+import fr.sorbonne_u.components.ports.AbstractOutboundPort;
+import interfaces.ContentDescriptorI;
+import interfaces.ContentManagementCI;
+import interfaces.ContentTemplateI;
+import rep.facade.ConnectorCM;
+
+public class CMOutboundPort extends AbstractOutboundPort implements ContentManagementCI {
+	
+	private static final long serialVersionUID = 1L;
+	
+	public CMOutboundPort(ComponentI owner) throws Exception {
+		super(ContentManagementCI.class, owner);
+	}
+
+	public CMOutboundPort(String uri, ComponentI owner)
+			throws Exception {
+		super(uri, ContentManagementCI.class, owner);
+	}
+
+	@Override
+	public ContentDescriptorI find(ContentTemplateI cd, int hops) throws Exception {
+		
+		return((ConnectorCM) getConnector()).find(cd, hops);
+	}
+
+	@Override
+	public Set<ContentDescriptorI> match(ContentTemplateI cd, Set<ContentDescriptorI> matched, int hops)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return ((ConnectorCM) getConnector()).match(cd, matched, hops);
+	}
+
+}

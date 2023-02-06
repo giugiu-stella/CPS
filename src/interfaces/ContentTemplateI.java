@@ -4,8 +4,7 @@ import java.util.Set;
 
 public interface ContentTemplateI {
 	public String getTitle();
-	public String getAlbunmTitle();
+	public String getAlbumTitle();
 	public Set<String> getInterpreters();
 	public Set<String> getComposers();
-	
 }
