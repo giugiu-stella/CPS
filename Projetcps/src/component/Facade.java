@@ -6,12 +6,15 @@ import java.util.Set;
 
 import boundPort.CMInboundPort;
 import boundPort.FacadeInboundPort;
+import contenu.requetes.ContentDescriptorI;
+import contenu.requetes.ContentTemplateI;
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
 import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
 import fr.sorbonne_u.components.exceptions.ComponentStartException;
 import interfaces.ContentManagementCI;
+import interfaces.ContentManagementImplementationI;
 import interfaces.NodeCI;
 import interfaces.NodeManagementCI;
 import interfaces.App.ApplicationNodeAddress;
@@ -20,7 +23,7 @@ import interfaces.node.PeerNodeAddressI;
 @RequiredInterfaces(required = { NodeCI.class, ContentManagementCI.class })
 @OfferedInterfaces(offered = { NodeManagementCI.class, ContentManagementCI.class })
 
-public class Facade extends AbstractComponent{
+public class Facade extends AbstractComponent implements ContentManagementImplementationI{
 	
 	public static final String FIP_URI="fip-uri";
 	protected FacadeInboundPort fip;
@@ -75,10 +78,19 @@ public class Facade extends AbstractComponent{
 	public void leave(PeerNodeAddressI a) throws Exception {
 		
 	}
+
+	@Override
+	public ContentDescriptorI find(ContentTemplateI cd, int hops) throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public Set<ContentDescriptorI> match(ContentTemplateI cd, Set<ContentDescriptorI> matched, int hops)
+			throws Exception {
+		// TODO Auto-generated method stub
+		return null;
+	}
 	
 	
 }
-
-
-//creation d'un composant dans le code framework
-//String uri=AbstractComponent.createComponent(Facade.class.getCanonicalName(),new Object[] {1,0});

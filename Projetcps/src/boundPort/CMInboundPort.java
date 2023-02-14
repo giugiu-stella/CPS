@@ -2,15 +2,13 @@ package boundPort;
 
 import java.util.Set;
 
-import component.Pairs;
+import component.Facade;
 import contenu.requetes.ContentDescriptorI;
 import contenu.requetes.ContentTemplateI;
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractInboundPort;
 import interfaces.ContentManagementCI;
-import interfaces.ContentRequestI;
-import interfaces.node.PeerNodeAddressI;
 
 public class CMInboundPort extends AbstractInboundPort implements ContentManagementCI {
 		
@@ -31,8 +29,8 @@ public class CMInboundPort extends AbstractInboundPort implements ContentManagem
 		return this.getOwner().handleRequest(new AbstractComponent.AbstractService<ContentDescriptorI>() {
 			@Override 
 			public ContentDescriptorI call() throws Exception {
-				return (()) getOwner()).find(cd,hops) ;
-			}// faire une interface implement !!!
+				return ((Facade) getOwner()).find(cd,hops) ;
+			}
 		}) ;
 	
 	}
@@ -40,10 +38,10 @@ public class CMInboundPort extends AbstractInboundPort implements ContentManagem
 	@Override
 	public Set<ContentDescriptorI> match(ContentTemplateI cd, Set<ContentDescriptorI> matched, int hops)
 			throws Exception {
-		return this.getOwner().handleRequest(new AbstractComponent.AbstractService<Set<ContentDescriptorI>() {
+		return this.getOwner().handleRequest(new AbstractComponent.AbstractService<Set<ContentDescriptorI>>() {
 			@Override 
 			public Set<ContentDescriptorI> call() throws Exception {
-				return (()) getOwner()).match(cd,matched,hops) ;
+				return ((Facade) getOwner()).match(cd,matched,hops) ;
 			}
 		}) ;
 	}
