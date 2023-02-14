@@ -1,8 +1,6 @@
 package boundPort;
 
 import java.util.Set;
-
-import connector.ConnectorCM;
 import contenu.requetes.ContentDescriptorI;
 import contenu.requetes.ContentTemplateI;
 import fr.sorbonne_u.components.ComponentI;
@@ -25,14 +23,13 @@ public class CMOutboundPort extends AbstractOutboundPort implements ContentManag
 	@Override
 	public ContentDescriptorI find(ContentTemplateI cd, int hops) throws Exception {
 		
-		return((ConnectorCM) getConnector()).find(cd, hops);
+		return((ContentManagementCI) getConnector()).find(cd, hops);
 	}
 
 	@Override
 	public Set<ContentDescriptorI> match(ContentTemplateI cd, Set<ContentDescriptorI> matched, int hops)
 			throws Exception {
-		// TODO Auto-generated method stub
-		return ((ConnectorCM) getConnector()).match(cd, matched, hops);
+		return ((ContentManagementCI) getConnector()).match(cd, matched, hops);
 	}
 
 }

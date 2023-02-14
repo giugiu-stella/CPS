@@ -1,12 +1,12 @@
 package boundPort;
 
-import connector.ConnectorN;
+
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractOutboundPort;
 import interfaces.NodeCI;
 import interfaces.node.PeerNodeAddressI;
 
-public class NOutboundPort extends AbstractOutboundPort implements NodeCI {
+public class NOutboundPort extends AbstractOutboundPort implements NodeCI{
 	
 	private static final long serialVersionUID = 1L;
 	
@@ -21,14 +21,16 @@ public class NOutboundPort extends AbstractOutboundPort implements NodeCI {
 
 	@Override
 	public PeerNodeAddressI connect(PeerNodeAddressI a) throws Exception {
-		
-		return ((ConnectorN) getConnector()).connect(a);
+		return ((NodeCI) getConnector()).connect(a);
 	}
 
 	@Override
 	public void disconnect(PeerNodeAddressI a) throws Exception {
-		((ConnectorN) getConnector()).disconnect(a);
+		((NodeCI) getConnector()).disconnect(a);
 
 	}
+
+	
+	
 
 }

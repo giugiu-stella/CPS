@@ -1,8 +1,6 @@
 package boundPort;
 
 import java.util.Set;
-
-import connector.ConnectorNM;
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractOutboundPort;
 import interfaces.NodeManagementCI;
@@ -26,12 +24,12 @@ public class FacadeOutboundPort extends AbstractOutboundPort implements NodeMana
 	@Override
 	public Set<PeerNodeAddressI> join(PeerNodeAddressI a) throws Exception {
 		
-		return ((ConnectorNM) getConnector()).join(a);
+		return ((NodeManagementCI) getConnector()).join(a);
 	}
 
 	@Override
 	public void leave(PeerNodeAddressI a) throws Exception {
-		((ConnectorNM) getConnector()).leave(a);
+		((NodeManagementCI) getConnector()).leave(a);
 	}
 
 }

@@ -1,17 +1,15 @@
 package component;
 
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
 
 import boundPort.CMInboundPort;
-import boundPort.CMOutboundPort;
-import boundPort.FacadeInboundPort;
 import boundPort.FacadeOutboundPort;
 import boundPort.NInboundPort;
 import boundPort.NOutboundPort;
+import connector.ConnectorN;
 import connector.ConnectorNM;
-import contenu.requetes.ContentDescriptorI;
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
@@ -20,9 +18,7 @@ import fr.sorbonne_u.components.exceptions.ComponentStartException;
 import interfaces.ContentManagementCI;
 import interfaces.NodeCI;
 import interfaces.NodeManagementCI;
-import interfaces.App.ApplicationNodeAddress;
 import interfaces.node.ContentNodeAddress;
-import interfaces.node.ContentNodeAddressI;
 import interfaces.node.PeerNodeAddressI;
 
 @RequiredInterfaces(required = {NodeCI.class,ContentManagementCI.class,NodeManagementCI.class})
@@ -31,15 +27,20 @@ public class Pairs extends AbstractComponent {
 	public static final String Pip_URI="pip-uri";
 	protected FacadeOutboundPort pip;
 	protected NOutboundPort port_sortant;
+	protected NOutboundPort port_sortant_node;
 	private ContentNodeAddress contentNodeAddress;
 	private CMInboundPort CMip;
 	private NInboundPort Nip;
-	private Set<PeerNodeAddressI> liste;
+	private Set<PeerNodeAddressI> listevoisins;
+	private HashMap<PeerNodeAddressI, String> liaisonA_portsortant;
+	private NInboundPort port_entrant;
+	
 	
 	protected Pairs(ContentNodeAddress contentNodeAddress) {
-		super(1,0);
+		super(2,0);
 		this.contentNodeAddress= contentNodeAddress;
-		this.liste=new HashSet<PeerNodeAddressI>();
+		this.listevoisins=new HashSet<PeerNodeAddressI>();
+		this.liaisonA_portsortant=new HashMap<>();
 	}
 	
 	
@@ -74,43 +75,51 @@ public class Pairs extends AbstractComponent {
 	
 	
 	public void execute() throws Exception{
-		this.logMessage("execution en cours !") ;
-		this.liste=this.pip.join(contentNodeAddress);
 		
-	}
-	
-	//creer liste voisins
-	// creeer autres variables que port_sortant pour pas ecraser
-	
-	public PeerNodeAddressI connect(PeerNodeAddressI peer) throws Exception {
-		System.out.println("je suis dans connect...");
+		this.logMessage("execution en cours !");
+		this.listevoisins=this.pip.join(contentNodeAddress);
 		this.port_sortant= new NOutboundPort("Sortant-uri",this);
 		this.port_sortant.publishPort();
-		this.doPortConnection(port_sortant.getPortURI(),peer.getNodeURI(),ConnectorNM.class.getCanonicalName());
 		
-		for(PeerNodeAddressI p: this.liste) {
-			this.port_sortant= new NOutboundPort("Sortant-uri",this);
-			this.port_sortant.publishPort();
-			this.doPortConnection(port_sortant.getPortURI(),peer.getNodeURI(),ConnectorNM.class.getCanonicalName());
-			this.port_sortant.connect(p);
-			// creer equals pour les string => getURI()
+		this.port_entrant= new NInboundPort(contentNodeAddress.getNodeURI(),this);
+		this.port_entrant.publishPort();
+		
+		for(PeerNodeAddressI p: this.listevoisins) {
+			this.doPortConnection(port_sortant.getPortURI(),p.getNodeURI(),ConnectorN.class.getCanonicalName());
+			this.port_sortant.connect(contentNodeAddress);	
+			this.port_sortant.disconnect(contentNodeAddress);
 		}
-		return this.contentNodeAddress;
-		
 		
 	}
 	
-	public void disconnect(PeerNodeAddressI peer) throws Exception {
+	public PeerNodeAddressI connect(PeerNodeAddressI peer) throws Exception {
 		
+		System.out.println("je suis dans connect...");
+		this.port_sortant_node= new NOutboundPort("Sortant-uri",this);
+		this.port_sortant_node.publishPort();
+		this.doPortConnection(this.port_sortant_node.getPortURI(),peer.getNodeURI(),ConnectorN.class.getCanonicalName());
+		this.liaisonA_portsortant.put(peer,port_sortant.getPortURI());
+		System.out.println(liaisonA_portsortant);
+		return this.contentNodeAddress;
+	}
+	
+	
+	public void disconnect(PeerNodeAddressI peer) throws Exception {
+		System.out.println("je suis dans disconnect...");
+		String port_sortant_peer="";
+		for(PeerNodeAddressI p: this.liaisonA_portsortant.keySet()) {
+			if(peer.equalPNA(p)) {
+				port_sortant_peer= this.liaisonA_portsortant.get(p);
+			}
+		}
+		this.doPortDisconnection(port_sortant_peer);
+		System.out.println(port_sortant_peer);
 	}
 	
 	public Set<PeerNodeAddressI> join() throws Exception {
-		
-		return null;
-		
+		return null;	
 	}
 	
 	public void leave() throws Exception {
-		
 	}
 }

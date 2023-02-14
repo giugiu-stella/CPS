@@ -1,18 +1,12 @@
 package CVM;
 
-import java.util.HashSet;
-
 import component.Facade;
 import component.Pairs;
-import contenu.requetes.ContentDescriptor;
-import contenu.requetes.ContentDescriptorI;
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.AbstractPort;
 import fr.sorbonne_u.components.cvm.AbstractCVM;
 import interfaces.App.ApplicationNodeAddress;
 import interfaces.node.ContentNodeAddress;
-import interfaces.node.ContentNodeAddressI;
-import interfaces.node.PeerNodeAddressI;
 
 public class CVM extends AbstractCVM {
 

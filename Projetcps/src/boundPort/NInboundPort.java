@@ -24,13 +24,25 @@ public class NInboundPort extends AbstractInboundPort implements NodeCI {
 
 	@Override
 	public PeerNodeAddressI connect(PeerNodeAddressI a) throws Exception {
-		return getOwner().handleRequest();
+		return this.getOwner().handleRequest(new AbstractComponent.AbstractService<PeerNodeAddressI>() {
+			@Override 
+			public PeerNodeAddressI call() throws Exception {
+				return ((Pairs) getOwner()).connect(a) ;
+			}
+		}) ;
 	}
+	
 
 	@Override
 	public void disconnect(PeerNodeAddressI a) throws Exception {
-		getOwner().handleRequest();
-
+		this.getOwner().handleRequest(new AbstractComponent.AbstractService<Void>() {
+			@Override 
+			public Void call() throws Exception {
+				((Pairs) getOwner()).disconnect(a) ;
+				return null;
+			}
+		}) ;
 	}
+
 
 }

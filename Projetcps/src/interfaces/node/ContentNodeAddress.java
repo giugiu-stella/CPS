@@ -48,4 +48,14 @@ public class ContentNodeAddress implements ContentNodeAddressI {
 		return contentManagementURI;
 	}
 
+	@Override
+	public boolean equalPNA(PeerNodeAddressI p) {
+		if(this.nodeURI != p.getNodeURI() || this.nodeIdentifier != p.getNodeIdentifier()) {
+			return false;
+		}
+		return true;
+	}
+
+	
+
 }
