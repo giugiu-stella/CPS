@@ -20,31 +20,26 @@ public class ApplicationNodeAddress implements ApplicationNodeAddressI {
 
 	@Override
 	public String getNodeManagementURI() {
-		// TODO Auto-generated method stub
 		return nodeManagementURI;
 	}
 
 	@Override
 	public String getNodeIdentifier() {
-		// TODO Auto-generated method stub
 		return nodeIdentifier;
 	}
 
 	@Override
 	public boolean isFacade() {
-		// TODO Auto-generated method stub
 		return isFacade;
 	}
 
 	@Override
 	public boolean isPeer() {
-		// TODO Auto-generated method stub
 		return isPeer;
 	}
 
 	@Override
 	public String getContentManagementURI() {
-		// TODO Auto-generated method stub
 		return contentManagementURI;
 	}
 

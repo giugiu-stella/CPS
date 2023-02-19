@@ -20,31 +20,26 @@ public class ContentNodeAddress implements ContentNodeAddressI {
 
 	@Override
 	public String getNodeURI() {
-		// TODO Auto-generated method stub
 		return nodeURI;
 	}
 
 	@Override
 	public String getNodeIdentifier() {
-		// TODO Auto-generated method stub
 		return nodeIdentifier;
 	}
 
 	@Override
 	public boolean isFacade() {
-		// TODO Auto-generated method stub
 		return isFacade;
 	}
 
 	@Override
 	public boolean isPeer() {
-		// TODO Auto-generated method stub
 		return isPeer;
 	}
 
 	@Override
 	public String getContentManagementURI() {
-		// TODO Auto-generated method stub
 		return contentManagementURI;
 	}
 
