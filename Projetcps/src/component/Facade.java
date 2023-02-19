@@ -88,6 +88,7 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 	}
 	
 	public void leave(PeerNodeAddressI a) throws Exception {
+		System.out.println("je suis dans leave de facade...");
 		this.liste_pairs.remove(a);
 	}
 

@@ -75,7 +75,7 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	}
 	
 	public synchronized void finalise() throws Exception{
-		
+		leave();
 		super.finalise();
 	}
 	
@@ -88,6 +88,10 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 		for(PeerNodeAddressI p: this.listevoisins) {
 			this.doPortConnection(port_sortant.getPortURI(),p.getNodeURI(),ConnectorN.class.getCanonicalName());
 			this.port_sortant.connect(contentNodeAddress);
+		}
+		
+		for(PeerNodeAddressI p :listevoisins) {
+			this.port_sortant.disconnect(p);
 		}
 		
 	}
@@ -122,10 +126,6 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	
 	
 	public void leave() throws Exception {
-		System.out.println("ALED");
-		for(PeerNodeAddressI p :listevoisins) {
-			this.port_sortant.disconnect(p);
-		}
 		this.pip.leave(contentNodeAddress);
 	}
 
