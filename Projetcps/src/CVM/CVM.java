@@ -23,7 +23,7 @@ public class CVM extends AbstractCVM {
 		ContentNodeAddress c2 = new ContentNodeAddress("URI2", "node2", "cmuri2", false,true);
 		ApplicationNodeAddress a = new ApplicationNodeAddress(AbstractPort.generatePortURI(), "", AbstractPort.generatePortURI(),true, false);
 		ContentDescriptorI cd = new ContentDescriptor("The Nights", "Avicii", new HashSet<>(), new HashSet<>(),c,5);
-		AbstractComponent.createComponent(Pairs.class.getCanonicalName(),new Object[] {cd,a.getNodeManagementURI()});	
+		//AbstractComponent.createComponent(Pairs.class.getCanonicalName(),new Object[] {cd,a.getNodeManagementURI()});	
 		AbstractComponent.createComponent(Pairs.class.getCanonicalName(),new Object[] {c});		
 		AbstractComponent.createComponent(Facade.class.getCanonicalName(), new Object[] {a});	
 		AbstractComponent.createComponent(Pairs.class.getCanonicalName(),new Object[] {c2});

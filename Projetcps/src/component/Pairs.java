@@ -35,7 +35,6 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	private Set<PeerNodeAddressI> listevoisins;
 	private HashMap<PeerNodeAddressI, String> liaisonA_portsortant;
 	private NInboundPort port_entrant;
-	private CMOutboundPort port_sortant_cm;
 	
 	protected Pairs(ContentNodeAddress contentNodeAddress) {
 		super(2,0);
@@ -123,6 +122,7 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	
 	
 	public void leave() throws Exception {
+		System.out.println("ALED");
 		for(PeerNodeAddressI p :listevoisins) {
 			this.port_sortant.disconnect(p);
 		}
@@ -133,9 +133,6 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	@Override
 	public ContentDescriptorI find(ContentTemplateI cd, int hops) throws Exception {
 		System.out.println("je suis dans find...");
-		this.port_sortant_cm= new CMOutboundPort("?",this);
-		this.port_sortant_cm.publishPort();
-		
 		return null;
 	}
 

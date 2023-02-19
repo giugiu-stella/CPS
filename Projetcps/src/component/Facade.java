@@ -31,11 +31,10 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 	public static final String FIP_URI="fip-uri";
 	protected FacadeInboundPort fip;
 	private ApplicationNodeAddress applicationNodeAddress;
-	private CMInboundPort CMip;
+	private CMOutboundPort CMip;
 	private Set<PeerNodeAddressI> liste_pairs;
-	private HashMap<PeerNodeAddressI, CMInboundPort> liste_racine;
+	private HashMap<PeerNodeAddressI, CMOutboundPort> liste_racine;
 	private int valeur=4;
-	private CMInboundPort port_entrant_cm;
 	
 	protected Facade(ApplicationNodeAddress applicationNodeAddress) throws Exception{
 		super(1,0);
@@ -43,17 +42,15 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 		this.fip.publishPort();
 		this.applicationNodeAddress=applicationNodeAddress;
 		this.liste_pairs=new HashSet<PeerNodeAddressI>();
-		this.liste_racine= new HashMap<PeerNodeAddressI,CMInboundPort>();
-		this.port_entrant_cm= new CMInboundPort("Entrant-uri-cm",this);
+		this.liste_racine= new HashMap<PeerNodeAddressI,CMOutboundPort>();
 		
 	}
 	
 	public synchronized void start() throws ComponentStartException {
 		try {
-			this.CMip= new CMInboundPort(applicationNodeAddress.getContentManagementURI(),this);
+			this.CMip= new CMOutboundPort(applicationNodeAddress.getContentManagementURI(),this);
 			this.fip.publishPort();
 			this.CMip.publishPort();
-			this.port_entrant_cm.publishPort();
 		} catch (Exception e) {
 			throw new ComponentStartException(e);
 		}
@@ -64,7 +61,6 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 		try {
 			this.fip.unpublishPort();
 			this.CMip.unpublishPort();
-			this.port_entrant_cm.unpublishPort();
 		} catch (Exception e) {
 			throw new ComponentShutdownException(e);
 		}
@@ -80,7 +76,7 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 		this.liste_pairs.add(a);
 		
 		if(this.valeur==4) {
-			this.liste_racine.put(a,this.port_entrant_cm);
+			this.liste_racine.put(a,this.CMip);
 			this.valeur=0;
 		}
 		else {
@@ -97,12 +93,12 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 
 	@Override
 	public ContentDescriptorI find(ContentTemplateI cd, int hops) throws Exception {
-		
+		ContentDescriptorI CD = null;
 		for(PeerNodeAddressI noeud: liste_racine.keySet()) {
-			ContentDescriptorI CD=liste_racine.get(noeud).find(cd, hops);
+			CD=liste_racine.get(noeud).find(cd, hops);
 			
 		}
-		return null;
+		return CD;
 	}
 
 	@Override
