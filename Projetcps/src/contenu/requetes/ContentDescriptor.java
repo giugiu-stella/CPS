@@ -61,7 +61,14 @@ public class ContentDescriptor implements ContentDescriptorI {
 	}
 
 	@Override
-	public boolean match(ContentDescriptorI t) {
+	public boolean match(ContentTemplateI cd) {
+		if(!(cd.getTitle().isEmpty())) {
+			return cd.getTitle().equals(this.getTitle());
+		}
+	
+		if(!(cd.getAlbumTitle().isEmpty())) {
+			return cd.getAlbumTitle().equals(this.getAlbumTitle());
+		}
 		return false;
 	}
 

@@ -1,14 +1,20 @@
 package component;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+
+import boundPort.CMInboundPort;
 import boundPort.CMOutboundPort;
+//import boundPort.CMInboundPort;
 import boundPort.FacadeOutboundPort;
 import boundPort.NInboundPort;
 import boundPort.NOutboundPort;
 import connector.ConnectorN;
 import connector.ConnectorNM;
+import contenu.requetes.ContentDescriptor;
 import contenu.requetes.ContentDescriptorI;
 import contenu.requetes.ContentTemplateI;
 import fr.sorbonne_u.components.AbstractComponent;
@@ -31,30 +37,30 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	protected NOutboundPort port_sortant;
 	protected NOutboundPort port_sortant_node;
 	private ContentNodeAddress contentNodeAddress;
-	private CMOutboundPort CMop;
+	private CMInboundPort CMip;
+	//private NInboundPort Nip;
 	private Set<PeerNodeAddressI> listevoisins;
 	private HashMap<PeerNodeAddressI, String> liaisonA_portsortant;
 	private NInboundPort port_entrant;
+	private ArrayList<ContentDescriptor> contenu;
+	
 	
 	protected Pairs(ContentNodeAddress contentNodeAddress) {
 		super(2,0);
 		this.contentNodeAddress= contentNodeAddress;
 		this.listevoisins=new HashSet<PeerNodeAddressI>();
 		this.liaisonA_portsortant=new HashMap<>();
+		this.contenu=new ArrayList<>();
 	}
 	
 	
 	public synchronized void start() throws ComponentStartException {
 		try {
 			this.pip= new FacadeOutboundPort(contentNodeAddress.getNodeURI(),this);
-			this.CMop= new CMOutboundPort("?", this);
+			this.CMip= new CMInboundPort(contentNodeAddress.getContentManagementURI(), this);
 			this.pip.publishPort();
 			this.doPortConnection(pip.getPortURI(),Facade.FIP_URI,ConnectorNM.class.getCanonicalName());
-			this.CMop.publishPort();
-			this.port_sortant= new NOutboundPort("Sortant-uri",this);
-			this.port_sortant.publishPort();
-			this.port_entrant= new NInboundPort(contentNodeAddress.getNodeURI(),this);
-			this.port_entrant.publishPort();
+			this.CMip.publishPort();
 		} catch (Exception e) {
 			throw new ComponentStartException(e);
 		}
@@ -67,7 +73,7 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 			this.port_sortant.unpublishPort();
 			this.port_sortant_node.unpublishPort();
 			this.port_entrant.unpublishPort();
-			this.CMop.unpublishPort();
+			//this.CMip.unpublishPort();
 		} catch (Exception e) {
 			throw new ComponentShutdownException(e);
 		}
@@ -75,23 +81,26 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	}
 	
 	public synchronized void finalise() throws Exception{
-		leave();
+		
+		this.port_sortant.disconnect(contentNodeAddress);
+		
 		super.finalise();
 	}
 	
-
+	
 	public void execute() throws Exception{
 		
 		this.logMessage("execution en cours !");
 		this.listevoisins=this.pip.join(contentNodeAddress);
+		this.port_sortant= new NOutboundPort("Sortant-uri",this);
+		this.port_sortant.publishPort();
+		
+		this.port_entrant= new NInboundPort(contentNodeAddress.getNodeURI(),this);
+		this.port_entrant.publishPort();
 		
 		for(PeerNodeAddressI p: this.listevoisins) {
 			this.doPortConnection(port_sortant.getPortURI(),p.getNodeURI(),ConnectorN.class.getCanonicalName());
 			this.port_sortant.connect(contentNodeAddress);
-		}
-		
-		for(PeerNodeAddressI p :listevoisins) {
-			this.port_sortant.disconnect(p);
 		}
 		
 	}
@@ -124,15 +133,32 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 		return null;	
 	}
 	
-	
 	public void leave() throws Exception {
-		this.pip.leave(contentNodeAddress);
 	}
 
 
 	@Override
 	public ContentDescriptorI find(ContentTemplateI cd, int hops) throws Exception {
-		System.out.println("je suis dans find...");
+		for (int i = 0; i < this.contenu.size(); i++) {
+			ContentDescriptor res=this.contenu.get(i);
+			if(res.match(cd)) {
+				return res;
+			}
+			else {
+				hops--;
+			}
+		
+		
+		if(hops !=0 && !(liaisonA_portsortant.isEmpty())) {
+			  for (Map.Entry m : liaisonA_portsortant.entrySet()) {
+				  
+			  }
+		}
+		
+		else {
+			return null;
+		}
+		}
 		return null;
 	}
 
@@ -141,7 +167,6 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	public Set<ContentDescriptorI> match(ContentTemplateI cd, Set<ContentDescriptorI> matched, int hops)
 			throws Exception {
 		System.out.println("je suis dans match...");
-		
 		return null;
 	}
 }

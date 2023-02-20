@@ -95,9 +95,9 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 	@Override
 	public ContentDescriptorI find(ContentTemplateI cd, int hops) throws Exception {
 		ContentDescriptorI CD = null;
-		for(PeerNodeAddressI noeud: liste_racine.keySet()) {
-			CD=liste_racine.get(noeud).find(cd, hops);
-			
+		for(CMOutboundPort uri: liste_racine.values()) {
+			CMOutboundPort port=liste_racine.get(uri);	
+			return port.find(cd, hops);
 		}
 		return CD;
 	}
