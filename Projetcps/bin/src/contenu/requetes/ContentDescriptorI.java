@@ -7,6 +7,5 @@ public interface ContentDescriptorI extends ContentTemplateI{
 	public long getSize();
 	public boolean equals(ContentDescriptorI cd);
 	public boolean match(ContentTemplateI t);
-	public void afficherCD();
 
 }

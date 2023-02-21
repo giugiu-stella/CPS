@@ -22,7 +22,6 @@ public class CMOutboundPort extends AbstractOutboundPort implements ContentManag
 
 	@Override
 	public ContentDescriptorI find(ContentTemplateI cd, int hops) throws Exception {
-		//System.out.println("CMOut#find " + this.getConnector());
 		
 		return((ContentManagementCI) getConnector()).find(cd, hops);
 	}

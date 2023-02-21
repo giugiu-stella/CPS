@@ -8,7 +8,7 @@ import java.util.Set;
 import boundPort.CMInboundPort;
 import boundPort.CMOutboundPort;
 import boundPort.FacadeInboundPort;
-import connector.ConnectorCM;
+import boundPort.NOutboundPort;
 import contenu.requetes.ContentDescriptorI;
 import contenu.requetes.ContentTemplateI;
 import fr.sorbonne_u.components.AbstractComponent;
@@ -31,39 +31,36 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 	public static final String FIP_URI="fip-uri";
 	protected FacadeInboundPort fip;
 	private ApplicationNodeAddress applicationNodeAddress;
-	private CMOutboundPort CMopfacade;
-	private CMInboundPort CMipfacade;
+	private CMOutboundPort CMip;
 	private Set<PeerNodeAddressI> liste_pairs;
 	private HashMap<PeerNodeAddressI, CMOutboundPort> liste_racine;
 	private int valeur=4;
 	
 	protected Facade(ApplicationNodeAddress applicationNodeAddress) throws Exception{
 		super(1,0);
+		this.fip= new FacadeInboundPort(FIP_URI,this);
+		this.fip.publishPort();
+		this.applicationNodeAddress=applicationNodeAddress;
 		this.liste_pairs=new HashSet<PeerNodeAddressI>();
 		this.liste_racine= new HashMap<PeerNodeAddressI,CMOutboundPort>();
-		this.applicationNodeAddress=applicationNodeAddress;
-		this.fip= new FacadeInboundPort(FIP_URI,this);
-		this.CMipfacade=new CMInboundPort("oui",this);
-		this.fip.publishPort();
-		this.CMipfacade.publishPort();
+		
 	}
 	
 	public synchronized void start() throws ComponentStartException {
 		try {
-			this.CMopfacade= new CMOutboundPort(applicationNodeAddress.getContentManagementURI(),this);
-			this.CMopfacade.publishPort();
+			this.CMip= new CMOutboundPort(applicationNodeAddress.getContentManagementURI(),this);
+			this.fip.publishPort();
+			this.CMip.publishPort();
 		} catch (Exception e) {
 			throw new ComponentStartException(e);
 		}
 		super.start();
 	}
-	
 	@Override
 	public synchronized void shutdown() throws ComponentShutdownException {
 		try {
 			this.fip.unpublishPort();
-			this.CMipfacade.unpublishPort();
-			this.CMopfacade.unpublishPort();
+			this.CMip.unpublishPort();
 		} catch (Exception e) {
 			throw new ComponentShutdownException(e);
 		}
@@ -75,11 +72,11 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 	}
 	
 	public Set<PeerNodeAddressI> join(PeerNodeAddressI a) throws Exception {
-		System.out.println("Je suis dans join de Facade...");
+		System.out.println("je join...");
 		this.liste_pairs.add(a);
 		
 		if(this.valeur==4) {
-			this.liste_racine.put(a,this.CMopfacade);
+			this.liste_racine.put(a,this.CMip);
 			this.valeur=0;
 		}
 		else {
@@ -87,30 +84,27 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 		}
 		
 		return this.liste_pairs;
+		
 	}
 	
 	public void leave(PeerNodeAddressI a) throws Exception {
-		System.out.println("je suis dans leave de Facade...");
+		System.out.println("je suis dans leave de facade...");
 		this.liste_pairs.remove(a);
 	}
 
 	@Override
 	public ContentDescriptorI find(ContentTemplateI cd, int hops) throws Exception {
-		System.out.println("Je suis dans find de Facade...");
-		doPortConnection(this.CMopfacade.getPortURI(),"non",ConnectorCM.class.getCanonicalName());
-		int n = liste_racine.size();
-		int intRand= (int) (Math.random() * n);
-		Object uri=liste_racine.keySet().toArray()[intRand];
-		//SI PB C EST À CAUSE DE INTRAND QUI EST EN DEHORS DE LA LISTE
-		CMOutboundPort port=liste_racine.get(uri);
-		return port.find(cd, hops);
-		
+		ContentDescriptorI CD = null;
+		for(CMOutboundPort uri: liste_racine.values()) {
+			CMOutboundPort port=liste_racine.get(uri);	
+			return port.find(cd, hops);
+		}
+		return CD;
 	}
 
 	@Override
 	public Set<ContentDescriptorI> match(ContentTemplateI cd, Set<ContentDescriptorI> matched, int hops)
 			throws Exception {
-		System.out.println("Je suis dans match de Facade...");
 		return null;
 	}
 	
