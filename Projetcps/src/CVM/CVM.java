@@ -24,6 +24,8 @@ public class CVM extends AbstractCVM {
 	public void deploy() throws Exception {
 		ContentNodeAddress c = new ContentNodeAddress("URI", "node1", "cmuri", false,true);
 		ContentNodeAddress c2 = new ContentNodeAddress("URI2", "node2", "cmuri2", false,true);
+		ContentNodeAddress c3 = new ContentNodeAddress("URI3", "node3", "cmuri3", false,true);
+		ContentNodeAddress c4 = new ContentNodeAddress("URI4", "node4", "cmuri4", false,true);
 		ApplicationNodeAddress a = new ApplicationNodeAddress(AbstractPort.generatePortURI(), "", AbstractPort.generatePortURI(),true, false);
 		ContentDescriptorI cd = new ContentDescriptor("The Nights", "Avicii", new HashSet<String>(), new HashSet<String>(),c,5);
 		ContentTemplateI ct = new ContentTemplate("The Nights","", new HashSet<String>(), new HashSet<String>());
@@ -31,7 +33,6 @@ public class CVM extends AbstractCVM {
 		AbstractComponent.createComponent(Facade.class.getCanonicalName(), new Object[] {a});	
 		AbstractComponent.createComponent(Pairs.class.getCanonicalName(),new Object[] {c2,cd});
 		AbstractComponent.createComponent(Client.class.getCanonicalName(),new Object[] {ct,1});	
-
 	
 		super.deploy();
 	}

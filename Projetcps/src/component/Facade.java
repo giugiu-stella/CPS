@@ -12,6 +12,7 @@ import connector.ConnectorCM;
 import contenu.requetes.ContentDescriptorI;
 import contenu.requetes.ContentTemplateI;
 import fr.sorbonne_u.components.AbstractComponent;
+import fr.sorbonne_u.components.AbstractPort;
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
 import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
@@ -50,7 +51,7 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 	
 	public synchronized void start() throws ComponentStartException {
 		try {
-			this.CMopfacade= new CMOutboundPort(applicationNodeAddress.getContentManagementURI(),this);
+			this.CMopfacade= new CMOutboundPort(AbstractPort.generatePortURI(),this);
 			this.CMopfacade.publishPort();
 		} catch (Exception e) {
 			throw new ComponentStartException(e);
@@ -77,16 +78,17 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 	public Set<PeerNodeAddressI> join(PeerNodeAddressI a) throws Exception {
 		System.out.println("Je suis dans join de Facade...");
 		this.liste_pairs.add(a);
-		
+		System.out.println(this.valeur);
 		if(this.valeur==4) {
 			this.liste_racine.put(a,this.CMopfacade);
 			this.valeur=0;
+			System.out.println("liste_racine " +this.liste_racine);
+			return this.liste_pairs;
 		}
 		else {
 			this.valeur++;
+			return this.liste_pairs;
 		}
-		
-		return this.liste_pairs;
 	}
 	
 	public void leave(PeerNodeAddressI a) throws Exception {
@@ -100,6 +102,7 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 		doPortConnection(this.CMopfacade.getPortURI(),"non",ConnectorCM.class.getCanonicalName());
 		int n = liste_racine.size();
 		int intRand= (int) (Math.random() * n);
+		System.out.println("taille "+ n);
 		Object uri=liste_racine.keySet().toArray()[intRand];
 		//SI PB C EST À CAUSE DE INTRAND QUI EST EN DEHORS DE LA LISTE
 		CMOutboundPort port=liste_racine.get(uri);

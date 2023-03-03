@@ -7,6 +7,7 @@ import java.util.Set;
 import boundPort.CMInboundPort;
 import boundPort.CMOutboundPort;
 import boundPort.FacadeOutboundPort;
+import boundPort.NInboundPort;
 import boundPort.NOutboundPort;
 import connector.ConnectorN;
 import connector.ConnectorNM;
@@ -14,6 +15,7 @@ import contenu.requetes.ContentDescriptor;
 import contenu.requetes.ContentDescriptorI;
 import contenu.requetes.ContentTemplateI;
 import fr.sorbonne_u.components.AbstractComponent;
+import fr.sorbonne_u.components.AbstractPort;
 import fr.sorbonne_u.components.annotations.OfferedInterfaces;
 import fr.sorbonne_u.components.annotations.RequiredInterfaces;
 import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
@@ -38,6 +40,8 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	private HashMap<PeerNodeAddressI, String> listevoisins_noeud_et_Nop;
 	private HashMap<PeerNodeAddressI, CMOutboundPort> listevoisins_noeud_et_CMop;
 	private ArrayList<ContentDescriptor> contenu;
+	private NInboundPort Nip;
+	private NInboundPort Nip2;
 	
 	
 	protected Pairs(ContentNodeAddress contentNodeAddress,ContentDescriptor cd) throws Exception {
@@ -55,7 +59,7 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	
 	public synchronized void start() throws ComponentStartException {
 		try {
-			this.fop= new FacadeOutboundPort(contentNodeAddress.getNodeURI(),this);
+			this.fop= new FacadeOutboundPort("je-suis-une-uri",this);
 			this.CMoppair= new CMOutboundPort(contentNodeAddress.getContentManagementURI(), this);
 			this.fop.publishPort();
 			this.CMoppair.publishPort();
@@ -72,6 +76,8 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 		try {
 			this.fop.unpublishPort();
 			this.Nop.unpublishPort();
+			this.Nip.unpublishPort();
+			this.Nip2.unpublishPort();
 			this.CMippair.unpublishPort();
 		} catch (Exception e) {
 			throw new ComponentShutdownException(e);
@@ -81,6 +87,7 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	
 	public synchronized void finalise() throws Exception{
 		Thread.sleep(5000L);
+		this.fop.leave(contentNodeAddress);
 		this.Nop.disconnect(contentNodeAddress);
 		super.finalise();
 	}
@@ -90,21 +97,23 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 		
 		System.out.println("Je suis dans execute de Pairs...");
 		this.listevoisins=this.fop.join(contentNodeAddress);
-		
 		for(PeerNodeAddressI p: this.listevoisins) {
-			this.doPortConnection(this.Nop.getPortURI(),p.getNodeURI(),ConnectorN.class.getCanonicalName());
+			this.Nip= new NInboundPort(p.getNodeURI(),this);
+			this.Nip.publishPort();
+			this.doPortConnection(this.Nop.getPortURI(),this.Nip.getPortURI(),ConnectorN.class.getCanonicalName());
 			this.Nop.connect(contentNodeAddress);
 		}
 		
 	}
 	
 	public PeerNodeAddressI connect(PeerNodeAddressI peer) throws Exception {
-		
+		this.Nip2= new NInboundPort(peer.getNodeURI(),this);
+		this.Nip2.publishPort();
 		System.out.println("je suis dans connect de Pairs...");		
-		this.doPortConnection(this.Nop.getPortURI(),peer.getNodeURI(),ConnectorN.class.getCanonicalName());
+		this.doPortConnection(this.Nop.getPortURI(),Nip2.getPortURI(),ConnectorN.class.getCanonicalName());
 		this.listevoisins_noeud_et_Nop.put(peer,this.Nop.getPortURI());
 		this.listevoisins_noeud_et_CMop.put(peer,this.CMoppair);
-		System.out.println(listevoisins_noeud_et_Nop);
+		//System.out.println(listevoisins_noeud_et_Nop);
 		return this.contentNodeAddress;
 	}
 	
@@ -112,13 +121,14 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	public void disconnect(PeerNodeAddressI peer) throws Exception {
 		System.out.println("je suis dans disconnect de Pairs...");
 		String port_sortant_peer="";
+	
 		for(PeerNodeAddressI p: this.listevoisins_noeud_et_Nop.keySet()) {
 			if(peer.equalPNA(p)) {
 				port_sortant_peer= this.listevoisins_noeud_et_Nop.get(p);
 			}
 		}
 		this.doPortDisconnection(port_sortant_peer);
-		System.out.println(port_sortant_peer);
+		//System.out.println(port_sortant_peer);
 	}
 	
 	public Set<PeerNodeAddressI> join() throws Exception {
