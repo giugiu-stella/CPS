@@ -107,14 +107,18 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 		//SI PB C EST À CAUSE DE INTRAND QUI EST EN DEHORS DE LA LISTE
 		CMOutboundPort port=liste_racine.get(uri);
 		return port.find(cd, hops);
-		
 	}
-
+	
 	@Override
 	public Set<ContentDescriptorI> match(ContentTemplateI cd, Set<ContentDescriptorI> matched, int hops)
 			throws Exception {
 		System.out.println("Je suis dans match de Facade...");
-		return null;
+		doPortConnection(this.CMopfacade.getPortURI(),"non",ConnectorCM.class.getCanonicalName());
+		int n = liste_racine.size();
+		int intRand= (int) (Math.random() * n);
+		Object uri=liste_racine.keySet().toArray()[intRand];
+		CMOutboundPort port=liste_racine.get(uri);
+		return port.match(cd, matched, hops);
 	}
 	
 	

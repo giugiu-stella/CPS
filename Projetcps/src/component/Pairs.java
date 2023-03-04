@@ -44,14 +44,13 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	private NInboundPort Nip2;
 	
 	
-	protected Pairs(ContentNodeAddress contentNodeAddress,ContentDescriptor cd) throws Exception {
+	protected Pairs(ContentNodeAddress contentNodeAddress,ArrayList<ContentDescriptor> cd) throws Exception {
 		super(2,0);
 		this.contentNodeAddress= contentNodeAddress;
 		this.listevoisins=new HashSet<PeerNodeAddressI>();
 		this.listevoisins_noeud_et_Nop=new HashMap<>();
 		this.listevoisins_noeud_et_CMop=new HashMap<>();
-		this.contenu=new ArrayList<>();
-		this.contenu.add(cd);
+		this.contenu=cd;
 		this.CMippair=new CMInboundPort("non", this);
 		this.CMippair.publishPort();
 	}
@@ -59,12 +58,12 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	
 	public synchronized void start() throws ComponentStartException {
 		try {
-			this.fop= new FacadeOutboundPort("je-suis-une-uri",this);
+			this.fop= new FacadeOutboundPort(AbstractPort.generatePortURI(),this);
 			this.CMoppair= new CMOutboundPort(contentNodeAddress.getContentManagementURI(), this);
 			this.fop.publishPort();
 			this.CMoppair.publishPort();
 			this.doPortConnection(fop.getPortURI(),Facade.FIP_URI,ConnectorNM.class.getCanonicalName());
-			this.Nop= new NOutboundPort("Sortant-uri",this);
+			this.Nop= new NOutboundPort(AbstractPort.generatePortURI(),this);
 			this.Nop.publishPort();
 		} catch (Exception e) {
 			throw new ComponentStartException(e);
@@ -88,7 +87,7 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	public synchronized void finalise() throws Exception{
 		Thread.sleep(5000L);
 		this.fop.leave(contentNodeAddress);
-		this.Nop.disconnect(contentNodeAddress);
+		//this.Nop.disconnect(contentNodeAddress);
 		super.finalise();
 	}
 	
@@ -121,7 +120,6 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	public void disconnect(PeerNodeAddressI peer) throws Exception {
 		System.out.println("je suis dans disconnect de Pairs...");
 		String port_sortant_peer="";
-	
 		for(PeerNodeAddressI p: this.listevoisins_noeud_et_Nop.keySet()) {
 			if(peer.equalPNA(p)) {
 				port_sortant_peer= this.listevoisins_noeud_et_Nop.get(p);
@@ -141,7 +139,6 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 			disconnect(p);
 		}
 	}
-
 
 	@Override
 	public ContentDescriptorI find(ContentTemplateI cd, int hops) throws Exception {
@@ -172,6 +169,29 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	public Set<ContentDescriptorI> match(ContentTemplateI cd, Set<ContentDescriptorI> matched, int hops)
 			throws Exception {
 		System.out.println("je suis dans match de Pairs...");
-		return null;
+		boolean dejapresent=false;
+		for (int i = 0; i < this.contenu.size(); i++) {
+			ContentDescriptor res=this.contenu.get(i);
+			if(res.match(cd)) {
+				for(ContentDescriptorI cdi : matched) {
+					if(res.equals(cdi)) {
+						dejapresent=true;
+						break;
+					}
+				}
+				if(!dejapresent) {
+					matched.add(res);
+				}
+			}
+		}
+		
+		System.out.println("matched : " +matched);
+		hops--;
+		if(hops !=0 && !(listevoisins_noeud_et_CMop.isEmpty())) {
+			  for (PeerNodeAddressI m : listevoisins_noeud_et_CMop.keySet()){
+				  listevoisins_noeud_et_CMop.get(m).match(cd, matched,hops);
+			  }
+		}
+		return matched;
 	}
 }
