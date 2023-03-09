@@ -6,5 +6,6 @@
 	<classpathentry kind="lib" path="/Users/giulianicarla/Downloads/commons-math3-3.6.1.jar"/>
 	<classpathentry kind="lib" path="/Users/giulianicarla/Downloads/javassist.jar"/>
 	<classpathentry kind="lib" path="accelerated-clock-07022023.jar"/>
+	<classpathentry kind="lib" path="data-management.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

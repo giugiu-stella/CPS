@@ -7,4 +7,5 @@ public interface ContentTemplateI {
 	public String getAlbumTitle();
 	public Set<String> getInterpreters();
 	public Set<String> getComposers();
+	public void afficherCD();
 }

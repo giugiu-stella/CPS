@@ -1,50 +1,33 @@
 package contenu.requetes;
 
+import java.util.HashMap;
 import java.util.Set;
 
 import interfaces.node.ContentNodeAddressI;
 
-public class ContentDescriptor implements ContentDescriptorI {
+public class ContentDescriptor extends ContentTemplate implements ContentDescriptorI {
 	
-	private String title;
-	private String albumTitle;
-	private Set<String> interpreters;
-	private Set<String> composers;
 	private ContentNodeAddressI nodeAddress;
 	private long size;
 	
 	
-	public ContentDescriptor(String title, String albumTitle, Set<String> interpreters, Set<String> composers,
+	public ContentDescriptor(String title, String albumTitle, Set<String> set, Set<String> set2,
 			ContentNodeAddressI nodeAddress, long size) {
-		super();
-		this.title = title;
-		this.albumTitle = albumTitle;
-		this.interpreters = interpreters;
-		this.composers = composers;
+		super(title,albumTitle,set,set2); 
 		this.nodeAddress = nodeAddress;
 		this.size = size;
 	}
-
+	
+	public ContentDescriptor(HashMap<String, Object> toLoad,ContentNodeAddressI nodeAddress) {
+        super(toLoad);
+        this.size = (Long) toLoad.get("size");
+        this.nodeAddress = nodeAddress;
+    }
 	@Override
-	public String getTitle() {
-		return title;
+	public String toString() {
+		return this.nodeAddress.getNodeURI();
 	}
-
-	@Override
-	public String getAlbumTitle() {
-		return albumTitle;
-	}
-
-	@Override
-	public Set<String> getInterpreters() {
-		return interpreters;
-	}
-
-	@Override
-	public Set<String> getComposers() {
-		return composers;
-	}
-
+	
 	@Override
 	public ContentNodeAddressI getContentNodeAddress() {
 		return nodeAddress;
@@ -57,38 +40,44 @@ public class ContentDescriptor implements ContentDescriptorI {
 
 	@Override
 	public boolean equals(ContentDescriptorI cd) {
+		System.out.println("je passe dans equals ... ");
 		if (!cd.getTitle().equals(this.getTitle())) {
+			System.out.println("je sors dans equals ... ");
 			return false;
 		}
 		if(!cd.getAlbumTitle().equals(this.getAlbumTitle())) {
+			System.out.println("je sors dans equals ... ");
 			return false;
 		}
 		
 		boolean ispresent=false;
 		for(String interpreter1: cd.getInterpreters()) {
-			for(String interpreter2: this.interpreters) {
+			for(String interpreter2: getInterpreters()) {
 				if(interpreter1.equals(interpreter2)){
 					ispresent=true;
 					break;
 				}
 			}
 			if(!ispresent) {
+				System.out.println("je sors dans equals ... ");
 				return false;
 			}
 		}
 		
 		ispresent=false;
 		for(String composer1: cd.getComposers()) {
-			for(String composer2: this.composers) {
+			for(String composer2: getComposers()) {
 				if(composer1.equals(composer2)){
 					ispresent=true;
 					break;
 				}
 			}
 			if(!ispresent) {
+				System.out.println("je sors dans equals ... ");
 				return false;
 			}
 		}
+		System.out.println("je sors dans equals ... ");
 		return true;
 	}
 	
@@ -109,6 +98,7 @@ public class ContentDescriptor implements ContentDescriptorI {
 		boolean resalbumtitre=false;
 		boolean resinterpretes=false;
 		boolean rescompositeurs=false;
+		
 		if(!(cd.getTitle().isEmpty())) {
 			titre=true;
 			restitre=cd.getTitle().equals(this.getTitle());
@@ -118,92 +108,28 @@ public class ContentDescriptor implements ContentDescriptorI {
 			albumtitre=true;
 			resalbumtitre=cd.getAlbumTitle().equals(this.getAlbumTitle());
 		}
+		
 		if(!(cd.getInterpreters().isEmpty())) {
 			interpretes=true;
-			boolean ispresent=false;
-			for(String interpreter1: cd.getInterpreters()) {
-				for(String interpreter2: this.interpreters) {
-					if(interpreter1.equals(interpreter2)){
-						ispresent=true;
-						break;
-					}
-				}
-				if(!ispresent) {
-					resinterpretes= false;
-				}
+			//System.out.println("Liste pb = "+ this.interpreters);
+			if ( getInterpreters()==null) {
+				return false;
 			}
-			resinterpretes=true;
+			resinterpretes=getInterpreters().equals(cd.getInterpreters());
 		}
 		if(!(cd.getComposers().isEmpty())) {
 			compositeurs=true;
-			boolean ispresent=false;
-			for(String composer1: cd.getComposers()) {
-				for(String composer2: this.composers) {
-					if(composer1.equals(composer2)){
-						ispresent=true;
-						break;
-					}
-				}
-				if(!ispresent) {
-					rescompositeurs=false;
-				}
+			//System.out.println("Liste pb = "+ this.composers);
+			if ( getComposers()==null) {
+				return false;
 			}
-			rescompositeurs=true;
+			rescompositeurs=getComposers().equals(cd.getComposers());
+			
+		}
+		if(titre==false && albumtitre==false && interpretes==false && compositeurs==false) {
+			return false;
 		}
 		return egalitebool(titre,restitre) && egalitebool(albumtitre,resalbumtitre) && egalitebool(interpretes,resinterpretes) && egalitebool(compositeurs,rescompositeurs);
 	}
-	/*
-	public boolean match(ContentTemplateI cd) {
-
-		if(!(cd.getTitle().isEmpty())) {
-			return cd.getTitle().equals(this.getTitle());
-		}
 	
-		if(!(cd.getAlbumTitle().isEmpty())) {
-			return cd.getAlbumTitle().equals(this.getAlbumTitle());
-		}
-		if(!(cd.getInterpreters().isEmpty())) {
-			boolean ispresent=false;
-			for(String interpreter1: cd.getInterpreters()) {
-				for(String interpreter2: this.interpreters) {
-					if(interpreter1.equals(interpreter2)){
-						ispresent=true;
-						break;
-					}
-				}
-				if(!ispresent) {
-					return false;
-				}
-			}
-			return true;
-		}
-		if(!(cd.getComposers().isEmpty())) {
-			boolean ispresent=false;
-			for(String composer1: cd.getComposers()) {
-				for(String composer2: this.composers) {
-					if(composer1.equals(composer2)){
-						ispresent=true;
-						break;
-					}
-				}
-				if(!ispresent) {
-					 return false;
-				}
-			}
-			return true;
-		}
-		return false;
-	}
-	*/
-	@Override
-	public void afficherCD() {
-		System.out.println("LE CONTENT DESCRIPTOR : ");
-		System.out.println("-------------------------");
-		System.out.println("titre : "+this.title);
-		System.out.println("titre de l'album : "+this.albumTitle);
-		System.out.println("interpretes : "+this.interpreters);
-		System.out.println("composers : "+this.composers);
-		
-	}
-
 }

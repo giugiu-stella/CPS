@@ -4,6 +4,7 @@ package component;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import boundPort.CMInboundPort;
 import boundPort.CMOutboundPort;
@@ -22,6 +23,7 @@ import interfaces.ContentManagementImplementationI;
 import interfaces.NodeCI;
 import interfaces.NodeManagementCI;
 import interfaces.App.ApplicationNodeAddress;
+import interfaces.node.ContentNodeAddressI;
 import interfaces.node.PeerNodeAddressI;
 
 @RequiredInterfaces(required = { NodeCI.class, ContentManagementCI.class })
@@ -30,6 +32,7 @@ import interfaces.node.PeerNodeAddressI;
 public class Facade extends AbstractComponent implements ContentManagementImplementationI{
 	
 	public static final String FIP_URI="fip-uri";
+	public static final String FIP_URI_CM=AbstractPort.generatePortURI();
 	protected FacadeInboundPort fip;
 	private ApplicationNodeAddress applicationNodeAddress;
 	private CMOutboundPort CMopfacade;
@@ -44,13 +47,14 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 		this.liste_racine= new HashMap<PeerNodeAddressI,CMOutboundPort>();
 		this.applicationNodeAddress=applicationNodeAddress;
 		this.fip= new FacadeInboundPort(FIP_URI,this);
-		this.CMipfacade=new CMInboundPort("oui",this);
+		this.CMipfacade=new CMInboundPort(FIP_URI_CM,this);
 		this.fip.publishPort();
 		this.CMipfacade.publishPort();
 	}
 	
 	public synchronized void start() throws ComponentStartException {
 		try {
+			this.fip.publishPort();
 			this.CMopfacade= new CMOutboundPort(AbstractPort.generatePortURI(),this);
 			this.CMopfacade.publishPort();
 		} catch (Exception e) {
@@ -78,16 +82,18 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 	public Set<PeerNodeAddressI> join(PeerNodeAddressI a) throws Exception {
 		System.out.println("Je suis dans join de Facade...");
 		this.liste_pairs.add(a);
-		System.out.println(this.valeur);
 		if(this.valeur==4) {
-			this.liste_racine.put(a,this.CMopfacade);
+			CMOutboundPort cmop_join=new CMOutboundPort(AbstractPort.generatePortURI(),this);
+			cmop_join.publishPort();
+			doPortConnection(cmop_join.getPortURI(),((ContentNodeAddressI)a).getContentManagementURI(),ConnectorCM.class.getCanonicalName());
+			this.liste_racine.put(a,cmop_join);
 			this.valeur=0;
 			System.out.println("liste_racine " +this.liste_racine);
-			return this.liste_pairs;
+			return new HashSet<PeerNodeAddressI>(this.liste_pairs);
 		}
 		else {
 			this.valeur++;
-			return this.liste_pairs;
+			return new HashSet<PeerNodeAddressI>(this.liste_pairs);
 		}
 	}
 	
@@ -99,26 +105,27 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 	@Override
 	public ContentDescriptorI find(ContentTemplateI cd, int hops) throws Exception {
 		System.out.println("Je suis dans find de Facade...");
-		doPortConnection(this.CMopfacade.getPortURI(),"non",ConnectorCM.class.getCanonicalName());
-		int n = liste_racine.size();
-		int intRand= (int) (Math.random() * n);
-		System.out.println("taille "+ n);
-		Object uri=liste_racine.keySet().toArray()[intRand];
-		//SI PB C EST À CAUSE DE INTRAND QUI EST EN DEHORS DE LA LISTE
-		CMOutboundPort port=liste_racine.get(uri);
-		return port.find(cd, hops);
+		for(Entry<PeerNodeAddressI,CMOutboundPort> e : liste_racine.entrySet()) {
+			ContentDescriptorI cdI=e.getValue().find(cd, hops);
+			if(cdI!=null) {
+				return cdI;
+			}
+		}
+		return null;
 	}
 	
 	@Override
 	public Set<ContentDescriptorI> match(ContentTemplateI cd, Set<ContentDescriptorI> matched, int hops)
 			throws Exception {
 		System.out.println("Je suis dans match de Facade...");
-		doPortConnection(this.CMopfacade.getPortURI(),"non",ConnectorCM.class.getCanonicalName());
-		int n = liste_racine.size();
-		int intRand= (int) (Math.random() * n);
-		Object uri=liste_racine.keySet().toArray()[intRand];
-		CMOutboundPort port=liste_racine.get(uri);
-		return port.match(cd, matched, hops);
+		for(Entry<PeerNodeAddressI,CMOutboundPort> e : liste_racine.entrySet()) {
+			Set<ContentDescriptorI> cdI=e.getValue().match(cd, matched,hops);
+			if(cdI!=null) {
+				return cdI;
+			}
+			
+		}
+		return matched;
 	}
 	
 	

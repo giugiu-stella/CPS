@@ -40,6 +40,7 @@ public class CMInboundPort extends AbstractInboundPort implements ContentManagem
 		return this.getOwner().handleRequest(new AbstractComponent.AbstractService<Set<ContentDescriptorI>>() {
 			@Override 
 			public Set<ContentDescriptorI> call() throws Exception {
+				System.out.println("matching " + cd);
 				return ((ContentManagementImplementationI) getOwner()).match(cd,matched,hops) ;
 			}
 		}) ;

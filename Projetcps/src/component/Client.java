@@ -1,6 +1,7 @@
 package component;
 
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -34,9 +35,11 @@ public class Client extends AbstractComponent{
 		this.port_facade_ip="oui";
 	}
 	
+	
 	public synchronized void start() throws ComponentStartException {
 		try {
-			doPortConnection(this.CMopclient.getPortURI(),this.port_facade_ip,ConnectorCM.class.getCanonicalName());
+			
+			doPortConnection(this.CMopclient.getPortURI(),Facade.FIP_URI_CM,ConnectorCM.class.getCanonicalName());
 		} catch (Exception e) {
 			throw new ComponentStartException(e);
 		}
@@ -44,12 +47,25 @@ public class Client extends AbstractComponent{
 	}
 	public void execute() throws Exception{
 		System.out.println("Je suis dans execute du Client...");
-		//ContentDescriptorI cd=this.CMopclient.find(this.ct,this.hops);
-		//cd.afficherCD();
-		Set<ContentDescriptorI> descriptors=this.CMopclient.match(this.ct,new HashSet<ContentDescriptorI>(),this.hops);
-		for(ContentDescriptorI cdi : descriptors) {
-			cdi.afficherCD();
+		Thread.sleep(10000L);
+		System.out.println("Recherche du template suivant : ");
+		ct.afficherCD();
+		Set<ContentDescriptorI> cd=this.CMopclient.match(this.ct,new HashSet<>(), this.hops);
+		if(cd==null) {
+			System.out.println("null");
 		}
+
+		else {
+			for(ContentDescriptorI cdi: cd) {
+				cdi.afficherCD();
+			}
+		}
+	
+		//Thread.sleep(10000L);
+		//Set<ContentDescriptorI> descriptors=this.CMopclient.match(this.ct,new HashSet<ContentDescriptorI>(),this.hops);
+		//for(ContentDescriptorI cdi : descriptors) {
+		//	cdi.afficherCD();
+		//}
 	}
 	public synchronized void shutdown() throws ComponentShutdownException {
 		try {

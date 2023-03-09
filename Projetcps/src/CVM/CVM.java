@@ -1,76 +1,85 @@
 package CVM;
 
-import java.io.FileInputStream;
-import java.io.ObjectInputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-
+import java.util.Set;
 import component.Client;
 import component.Facade;
 import component.Pairs;
 import contenu.requetes.ContentDescriptor;
-import contenu.requetes.ContentDescriptorI;
 import contenu.requetes.ContentTemplate;
 import contenu.requetes.ContentTemplateI;
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.AbstractPort;
 import fr.sorbonne_u.components.cvm.AbstractCVM;
+import fr.sorbonne_u.cps.p2Pcm.dataread.ContentDataManager;
 import interfaces.App.ApplicationNodeAddress;
 import interfaces.node.ContentNodeAddress;
+import interfaces.node.ContentNodeAddressI;
 
 public class CVM extends AbstractCVM {
 
+	public static final String	MY_DATA_DIR_NAME = "/Users/giulianicarla/eclipse-cps/Projetcps/Test";
+	protected static final boolean	DEBUG = true;										
+	protected ArrayList<HashMap<String,Object>> readTemplates;
+	protected ArrayList<HashMap<String,Object>> readDescriptors;
+	protected static final int HOPS = 3;
 	public CVM() throws Exception {
+		ContentDataManager.DATA_DIR_NAME=MY_DATA_DIR_NAME;
+		
 	}
 	
 	
 	public void deploy() throws Exception {
-		ContentNodeAddress c = new ContentNodeAddress("URI", "node1", "cmuri", false,true);
-		ContentNodeAddress cbis = new ContentNodeAddress("URIbis", "node1bis", "cmuribis", false,true);
-		ContentNodeAddress c2 = new ContentNodeAddress("URI2", "node2", "cmuri2", false,true);
-		ContentNodeAddress c3 = new ContentNodeAddress("URI3", "node3", "cmuri3", false,true);
-		ContentNodeAddress c4 = new ContentNodeAddress("URI4", "node4", "cmuri4", false,true);
-		ApplicationNodeAddress a = new ApplicationNodeAddress(AbstractPort.generatePortURI(), "", AbstractPort.generatePortURI(),true, false);
-		ContentDescriptor cd = new ContentDescriptor("The Nights", "Avicii", new HashSet<String>(), new HashSet<String>(),c,5);
-		ContentDescriptor cd2 = new ContentDescriptor("The Nights", "IDK", new HashSet<String>(), new HashSet<String>(),cbis,5);
-		ContentTemplateI ct = new ContentTemplate("The Nights","", new HashSet<String>(), new HashSet<String>());
-		ArrayList<ContentDescriptor> contenu = new ArrayList<>();
-		contenu.add(cd);
-		ArrayList<ContentDescriptor> contenu2 = new ArrayList<>();
-		contenu2.add(cd2);
-		AbstractComponent.createComponent(Pairs.class.getCanonicalName(),new Object[] {c,contenu});		
-		AbstractComponent.createComponent(Facade.class.getCanonicalName(), new Object[] {a});	
-		AbstractComponent.createComponent(Pairs.class.getCanonicalName(),new Object[] {c2,contenu2});
-		AbstractComponent.createComponent(Client.class.getCanonicalName(),new Object[] {ct,2});	
-		/*
-		HashSet<ContentDescriptorI> descriptors =new HashSet<ContentDescriptorI>();
-		for(int i=0;i<10;i++) {
-			FileInputStream f = new FileInputStream("Test/descriptors"+i);
-			ObjectInputStream of =new ObjectInputStream(f);
-			HashMap<String,Object> data = (HashMap<String,Object>)(of.readObject());
-			ContentNodeAddress cdescrip= new ContentNodeAddress(AbstractPort.generatePortURI(), AbstractPort.generatePortURI(),AbstractPort.generatePortURI(), false,true);
-			descriptors.add(new ContentDescriptor((String) data.get("title"), (String) data.get("album-title"), new HashSet<String>((List) data.get("interpreters")), new HashSet<String>((List) data.get("composers")),cdescrip,(Long) data.get("size")));
-			
-		}
-		System.out.println(descriptors);
 		
-		HashSet<ContentTemplateI> templates =new HashSet<ContentTemplateI>();
-		for(int i=0;i<2;i++) {
-			FileInputStream f = new FileInputStream("Test/templates"+i);
-			ObjectInputStream of =new ObjectInputStream(f);
-			HashMap<String,Object> data = (HashMap<String,Object>)(of.readObject());
-			templates.add(new ContentTemplate((String) data.get("title"), (String) data.get("album-title"), new HashSet<String>((List) data.get("interpreters")), new HashSet<String>((List) data.get("composers"))));
-		}
+			/* TEST DE BASE FAIT PAR NOUS = 
+			 * for(int i=0;i<2;i++) {
+				ContentNodeAddress c = new ContentNodeAddress(AbstractPort.generatePortURI(), AbstractPort.generatePortURI(),AbstractPort.generatePortURI(), false,true);
+				HashSet<String> inter=new HashSet<String>();
+				inter.add("carl");
+				HashSet<String> compo=new HashSet<String>();
+				compo.add("stella");
+				ContentDescriptor cd = new ContentDescriptor("The Nights", "album", inter, compo,c,2);
+				
+				AbstractComponent.createComponent(Pairs.class.getCanonicalName(),new Object[] {cd});
+			}
+		
+		
+		ApplicationNodeAddress a = new ApplicationNodeAddress(AbstractPort.generatePortURI(),AbstractPort.generatePortURI(), AbstractPort.generatePortURI(),true, false);
+		AbstractComponent.createComponent(Facade.class.getCanonicalName(), new Object[] {a});	
+		ApplicationNodeAddress a2 = new ApplicationNodeAddress(AbstractPort.generatePortURI(), AbstractPort.generatePortURI(), AbstractPort.generatePortURI(),true, false);
+	
+		ContentTemplateI ct = new ContentTemplate("The Nights","", new HashSet<String>(), new HashSet<String>());
+		AbstractComponent.createComponent(Client.class.getCanonicalName(),new Object[] {ct,1});
 		*/
+		ContentNodeAddress c2 = new ContentNodeAddress(AbstractPort.generatePortURI(), AbstractPort.generatePortURI(),AbstractPort.generatePortURI(), false,true);
+		HashSet<String> inter=new HashSet<String>();
+		inter.add("carl");
+		HashSet<String> compo=new HashSet<String>();
+		compo.add("stella");
+		ContentDescriptor cd2 = new ContentDescriptor("The Nights", "album", inter, compo,c2,2);
+			this.readDescriptors=ContentDataManager.readDescriptors(1);
+			System.out.println(this.readDescriptors);
+			for(HashMap<String,Object> hm:this.readDescriptors) {
+				ContentNodeAddress c = new ContentNodeAddress(AbstractPort.generatePortURI(), AbstractPort.generatePortURI(),AbstractPort.generatePortURI(), false,true);
+				ContentDescriptor cd = new ContentDescriptor(hm,c);
+				//cd.afficherCD();
+				AbstractComponent.createComponent(Pairs.class.getCanonicalName(),new Object[] {cd});
+			}
+			ApplicationNodeAddress a = new ApplicationNodeAddress(AbstractPort.generatePortURI(),AbstractPort.generatePortURI(), AbstractPort.generatePortURI(),true, false);
+			AbstractComponent.createComponent(Facade.class.getCanonicalName(), new Object[] {a});
+			
+			ContentTemplateI ct = new ContentTemplate("","Brandebourg Concertos", new HashSet<String>(), new HashSet<String>());
+			AbstractComponent.createComponent(Client.class.getCanonicalName(),new Object[] {ct,4});
+			
 		super.deploy();
 	}
 
 	public static void main(String[] args) {
 		try {
 			CVM c=new CVM();
-			c.startStandardLifeCycle(2000L);
+			c.startStandardLifeCycle(50000L);
 			Thread.sleep(5000L);
 			System.exit(0);
 		} catch(Exception e){
