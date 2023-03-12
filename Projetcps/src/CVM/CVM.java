@@ -1,9 +1,11 @@
 package CVM;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Set;
+import java.util.concurrent.TimeUnit;
+
 import component.Client;
 import component.Facade;
 import component.Pairs;
@@ -14,9 +16,9 @@ import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.AbstractPort;
 import fr.sorbonne_u.components.cvm.AbstractCVM;
 import fr.sorbonne_u.cps.p2Pcm.dataread.ContentDataManager;
+import fr.sorbonne_u.utils.aclocks.ClocksServer;
 import interfaces.App.ApplicationNodeAddress;
 import interfaces.node.ContentNodeAddress;
-import interfaces.node.ContentNodeAddressI;
 
 public class CVM extends AbstractCVM {
 
@@ -25,6 +27,10 @@ public class CVM extends AbstractCVM {
 	protected ArrayList<HashMap<String,Object>> readTemplates;
 	protected ArrayList<HashMap<String,Object>> readDescriptors;
 	protected static final int HOPS = 3;
+	protected static final long	DELAY_TO_START_IN_NANOS =TimeUnit.SECONDS.toNanos(5);
+	public static final String CLOCK_URI = "my-clock";
+	
+	
 	public CVM() throws Exception {
 		ContentDataManager.DATA_DIR_NAME=MY_DATA_DIR_NAME;
 		
@@ -53,25 +59,28 @@ public class CVM extends AbstractCVM {
 		ContentTemplateI ct = new ContentTemplate("The Nights","", new HashSet<String>(), new HashSet<String>());
 		AbstractComponent.createComponent(Client.class.getCanonicalName(),new Object[] {ct,1});
 		*/
-		ContentNodeAddress c2 = new ContentNodeAddress(AbstractPort.generatePortURI(), AbstractPort.generatePortURI(),AbstractPort.generatePortURI(), false,true);
-		HashSet<String> inter=new HashSet<String>();
-		inter.add("carl");
-		HashSet<String> compo=new HashSet<String>();
-		compo.add("stella");
-		ContentDescriptor cd2 = new ContentDescriptor("The Nights", "album", inter, compo,c2,2);
+		
+		long unixEpochStartTimeInNanos =TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis())
+				+ CVM.DELAY_TO_START_IN_NANOS;
+		
+		Instant	startInstant = Instant.parse("2023-02-07T08:00:00Z");
+		double accelerationFactor = 60.0;
+		AbstractComponent.createComponent(ClocksServer.class.getCanonicalName(),
+				new Object[]{CVM.CLOCK_URI, unixEpochStartTimeInNanos,
+							 startInstant, accelerationFactor});
+		
+
 			this.readDescriptors=ContentDataManager.readDescriptors(1);
-			System.out.println(this.readDescriptors);
 			for(HashMap<String,Object> hm:this.readDescriptors) {
 				ContentNodeAddress c = new ContentNodeAddress(AbstractPort.generatePortURI(), AbstractPort.generatePortURI(),AbstractPort.generatePortURI(), false,true);
 				ContentDescriptor cd = new ContentDescriptor(hm,c);
-				//cd.afficherCD();
 				AbstractComponent.createComponent(Pairs.class.getCanonicalName(),new Object[] {cd});
 			}
 			ApplicationNodeAddress a = new ApplicationNodeAddress(AbstractPort.generatePortURI(),AbstractPort.generatePortURI(), AbstractPort.generatePortURI(),true, false);
 			AbstractComponent.createComponent(Facade.class.getCanonicalName(), new Object[] {a});
 			
 			ContentTemplateI ct = new ContentTemplate("","Brandebourg Concertos", new HashSet<String>(), new HashSet<String>());
-			AbstractComponent.createComponent(Client.class.getCanonicalName(),new Object[] {ct,4});
+			AbstractComponent.createComponent(Client.class.getCanonicalName(),new Object[] {ct,HOPS});
 			
 		super.deploy();
 	}

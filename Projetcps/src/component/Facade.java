@@ -34,7 +34,6 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 	public static final String FIP_URI="fip-uri";
 	public static final String FIP_URI_CM=AbstractPort.generatePortURI();
 	protected FacadeInboundPort fip;
-	private ApplicationNodeAddress applicationNodeAddress;
 	private CMOutboundPort CMopfacade;
 	private CMInboundPort CMipfacade;
 	private Set<PeerNodeAddressI> liste_pairs;
@@ -45,7 +44,6 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 		super(1,0);
 		this.liste_pairs=new HashSet<PeerNodeAddressI>();
 		this.liste_racine= new HashMap<PeerNodeAddressI,CMOutboundPort>();
-		this.applicationNodeAddress=applicationNodeAddress;
 		this.fip= new FacadeInboundPort(FIP_URI,this);
 		this.CMipfacade=new CMInboundPort(FIP_URI_CM,this);
 		this.fip.publishPort();

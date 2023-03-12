@@ -1,12 +1,13 @@
 package component;
 
-import java.util.ArrayList;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
+import CVM.CVM;
 import boundPort.CMInboundPort;
 import boundPort.CMOutboundPort;
 import boundPort.FacadeOutboundPort;
@@ -28,11 +29,15 @@ import interfaces.ContentManagementCI;
 import interfaces.ContentManagementImplementationI;
 import interfaces.NodeCI;
 import interfaces.NodeManagementCI;
-import interfaces.node.ContentNodeAddress;
 import interfaces.node.ContentNodeAddressI;
 import interfaces.node.PeerNodeAddressI;
+import fr.sorbonne_u.utils.aclocks.AcceleratedClock;
+import fr.sorbonne_u.utils.aclocks.ClocksServer;
+import fr.sorbonne_u.utils.aclocks.ClocksServerCI;
+import fr.sorbonne_u.utils.aclocks.ClocksServerConnector;
+import fr.sorbonne_u.utils.aclocks.ClocksServerOutboundPort;
 
-@RequiredInterfaces(required = {NodeCI.class,ContentManagementCI.class,NodeManagementCI.class})
+@RequiredInterfaces(required = {NodeCI.class,ContentManagementCI.class,NodeManagementCI.class, ClocksServerCI.class})
 @OfferedInterfaces(offered = {NodeCI.class})
 public class Pairs extends AbstractComponent implements ContentManagementImplementationI {
 	public static final String Pip_URI="pip-uri";
@@ -41,20 +46,20 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	private CMInboundPort CMippair;
 	private ContentDescriptor contentNodeAddress;
 	private Set<PeerNodeAddressI> listevoisins;
-	private HashMap<PeerNodeAddressI, String> listevoisins_noeud_et_Nop;
 	private HashMap<PeerNodeAddressI, CMOutboundPort> listevoisins_CMop;
 	private HashMap<PeerNodeAddressI, NOutboundPort> listevoisins_Nop;
-
+	protected ClocksServerOutboundPort csop;
 	
 	
 	protected Pairs(ContentDescriptor cd) throws Exception {
-		super(1,0);
+		super(1,1);
 		this.contentNodeAddress= cd;
 		this.listevoisins=new HashSet<PeerNodeAddressI>();
 		this.listevoisins_Nop= new HashMap<>();
 		this.listevoisins_CMop=new HashMap<>();
-		this.listevoisins_noeud_et_Nop=new HashMap<>();
 		this.CMippair=new CMInboundPort(cd.getContentNodeAddress().getContentManagementURI(), this);
+		this.csop = new ClocksServerOutboundPort(this);
+		this.csop.publishPort();
 	}
 	
 	
@@ -77,6 +82,7 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 			this.fop.unpublishPort();
 			this.Nip.unpublishPort();
 			this.CMippair.unpublishPort();
+			this.csop.unpublishPort();
 		} catch (Exception e) {
 			throw new ComponentShutdownException(e);
 		}
@@ -84,8 +90,14 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	}
 	
 	public synchronized void finalise() throws Exception{
-	//	this.fop.leave(contentNodeAddress.getContentNodeAddress());
-	//	this.Nip.disconnect(contentNodeAddress.getContentNodeAddress());
+	
+		this.doPortDisconnection(this.csop.getPortURI());
+		
+		this.doPortDisconnection(this.fop.getPortURI());
+		
+		for(PeerNodeAddressI p: this.listevoisins) {
+			disconnect(p);
+		}
 		super.finalise();
 	}
 	
@@ -93,24 +105,27 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	public void execute() throws Exception{
 		
 		System.out.println("Je suis dans execute de Pairs...");
-		this.listevoisins=this.fop.join(contentNodeAddress.getContentNodeAddress());
-		//Thread.sleep(1000L);
-		for(PeerNodeAddressI p: this.listevoisins) {
-			if(p.equals(contentNodeAddress.getContentNodeAddress())) {
-				continue;
-			}
-			System.out.println(p.toString());
-			NOutboundPort Nip;
-			Nip= new NOutboundPort(AbstractPort.generatePortURI(),this);
-			Nip.publishPort();
-			this.doPortConnection(Nip.getPortURI(),p.getNodeURI(),ConnectorN.class.getCanonicalName());
-			CMOutboundPort CMop=new CMOutboundPort(AbstractPort.generatePortURI(),this);
-			CMop.publishPort();
-			this.doPortConnection(CMop.getPortURI(),((ContentNodeAddressI)p).getContentManagementURI(),ConnectorCM.class.getCanonicalName());
-			this.listevoisins_Nop.put(p,Nip);
-			this.listevoisins_CMop.put(p,CMop);
-			Nip.connect(contentNodeAddress.getContentNodeAddress());
-		}
+		this.doPortConnection(
+				this.csop.getPortURI(),
+				ClocksServer.STANDARD_INBOUNDPORT_URI,
+				ClocksServerConnector.class.getCanonicalName());
+		AcceleratedClock clock = this.csop.getClock(CVM.CLOCK_URI);
+		Instant startInstant = clock.getStartInstant();
+		clock.waitUntilStart();
+		long delayInNanos =
+				clock.nanoDelayUntilAcceleratedInstant(
+												startInstant.plusSeconds(150));
+		
+		this.scheduleTask(
+				o -> {
+					try {
+						((Pairs)o).action();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				},
+				delayInNanos,
+				TimeUnit.NANOSECONDS);
 
 	}
 	
@@ -125,19 +140,32 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 		this.doPortConnection(Nip2.getPortURI(),peer.getNodeURI(),ConnectorN.class.getCanonicalName());
 		this.listevoisins_Nop.put(peer,Nip2);
 		this.listevoisins_CMop.put(peer,CMop2);
+		
 		return this.contentNodeAddress.getContentNodeAddress();
 	}
 	
 	
 	public void disconnect(PeerNodeAddressI peer) throws Exception {
 		System.out.println("je suis dans disconnect de Pairs...");
+		
 		String port_sortant_peer="";
-		for(PeerNodeAddressI p: this.listevoisins_noeud_et_Nop.keySet()) {
-			if(peer.equalPNA(p)) {
-				port_sortant_peer= this.listevoisins_noeud_et_Nop.get(p);
-			}
+		for (Entry<PeerNodeAddressI, NOutboundPort> e : listevoisins_Nop.entrySet()) {
+			if(peer.equalPNA(e.getKey())) {
+				port_sortant_peer= e.getValue().getPortURI();
+				break;
+			}  	
 		}
+		String port_sortant_peer_cm="";
+		for (Entry<PeerNodeAddressI, CMOutboundPort> e : listevoisins_CMop.entrySet()) {
+			if(peer.equalPNA(e.getKey())) {
+				port_sortant_peer_cm= e.getValue().getPortURI();
+				break;
+			}  	
+		}
+	
 		this.doPortDisconnection(port_sortant_peer);
+		this.doPortDisconnection(port_sortant_peer_cm);
+		
 	}
 	
 	public Set<PeerNodeAddressI> join() throws Exception {
@@ -145,10 +173,7 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	}
 	
 	public void leave() throws Exception {
-		for(PeerNodeAddressI p: this.listevoisins) {
-			Thread.sleep(5000L);
-			disconnect(p);
-		}
+		
 	}
 
 	@Override
@@ -158,7 +183,7 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 			return null;
 		}
 	
-		if(this.contentNodeAddress.match(cd)) { //pb dans le match
+		if(this.contentNodeAddress.match(cd)) {
 			return this.contentNodeAddress;
 		}
 		
@@ -189,13 +214,34 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 		System.out.println("hops "+ hops);
 		if(hops !=0 && !(listevoisins_CMop.isEmpty())) {
 			for (Entry<PeerNodeAddressI,CMOutboundPort> e : listevoisins_CMop.entrySet()) {
-				  e.getValue().match(cd,matched,hops);
+				 System.out.println(e.getValue().match(cd,matched,hops)); // si on se stoppe ici => le pb est l'interblocage à régler 
 				  
 				  break;
 			}
 		}
 		
-	
 		return matched;
+	}
+	public void		action() throws Exception
+	{System.out.println("Pairs acting now: " + System.currentTimeMillis());
+		
+		this.listevoisins=this.fop.join(contentNodeAddress.getContentNodeAddress());
+		
+		for(PeerNodeAddressI p: this.listevoisins) {
+			if(p.equals(contentNodeAddress.getContentNodeAddress())) {
+				continue;
+			}
+			System.out.println(p.toString());
+			NOutboundPort Nip;
+			Nip= new NOutboundPort(AbstractPort.generatePortURI(),this);
+			Nip.publishPort();
+			this.doPortConnection(Nip.getPortURI(),p.getNodeURI(),ConnectorN.class.getCanonicalName());
+			CMOutboundPort CMop=new CMOutboundPort(AbstractPort.generatePortURI(),this);
+			CMop.publishPort();
+			this.doPortConnection(CMop.getPortURI(),((ContentNodeAddressI)p).getContentManagementURI(),ConnectorCM.class.getCanonicalName());
+			this.listevoisins_Nop.put(p,Nip);
+			this.listevoisins_CMop.put(p,CMop);
+			Nip.connect(contentNodeAddress.getContentNodeAddress());
+		}
 	}
 }
