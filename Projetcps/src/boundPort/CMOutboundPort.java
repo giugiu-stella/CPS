@@ -6,6 +6,7 @@ import contenu.requetes.ContentTemplateI;
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractOutboundPort;
 import interfaces.ContentManagementCI;
+import interfaces.NodeAddressI;
 
 public class CMOutboundPort extends AbstractOutboundPort implements ContentManagementCI {
 	
@@ -31,6 +32,13 @@ public class CMOutboundPort extends AbstractOutboundPort implements ContentManag
 	public Set<ContentDescriptorI> match(ContentTemplateI cd, Set<ContentDescriptorI> matched, int hops)
 			throws Exception {
 		return ((ContentManagementCI) getConnector()).match(cd, matched, hops);
+	}
+
+	@Override
+	public void find(ContentTemplateI cd, int hops, NodeAddressI requester, String requestURI)
+			throws Exception {
+		((ContentManagementCI)this.getConnector()).find(cd,hops,requester,requestURI);
+
 	}
 
 }

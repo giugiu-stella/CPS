@@ -20,6 +20,9 @@ import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
 import fr.sorbonne_u.components.exceptions.ComponentStartException;
 import interfaces.ContentManagementCI;
 import interfaces.ContentManagementImplementationI;
+import interfaces.FacadeContentManagementCI;
+import interfaces.FacadeContentManagementI;
+import interfaces.NodeAddressI;
 import interfaces.NodeCI;
 import interfaces.NodeManagementCI;
 import interfaces.App.ApplicationNodeAddress;
@@ -27,12 +30,13 @@ import interfaces.node.ContentNodeAddressI;
 import interfaces.node.PeerNodeAddressI;
 
 @RequiredInterfaces(required = { NodeCI.class, ContentManagementCI.class })
-@OfferedInterfaces(offered = { NodeManagementCI.class, ContentManagementCI.class })
+@OfferedInterfaces(offered = { NodeManagementCI.class, ContentManagementCI.class, FacadeContentManagementCI.class})
 
-public class Facade extends AbstractComponent implements ContentManagementImplementationI{
+public class Facade extends AbstractComponent implements ContentManagementImplementationI, FacadeContentManagementI{
 	
 	public static final String FIP_URI=AbstractPort.generatePortURI();
 	public static final String FIP_URI_CM=AbstractPort.generatePortURI();
+	public static final NodeAddressI FNA = new ApplicationNodeAddress( FIP_URI,"fna-uri",FIP_URI_CM,true,false);
 	protected FacadeInboundPort fip;
 	private CMOutboundPort CMopfacade;
 	private CMInboundPort CMipfacade;
@@ -127,6 +131,23 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 			break;	
 		}
 		return matched;
+	}
+
+	@Override
+	public void find(ContentTemplateI cd, int hops, NodeAddressI requester, String requestURI)
+			throws Exception {
+		for(Entry<PeerNodeAddressI,CMOutboundPort> e : liste_racine.entrySet()) {
+			e.getValue().find(cd, hops,requester,requestURI);
+			
+		}
+		
+	}
+
+	@Override
+	public void acceptFound(ContentDescriptorI found, String requestURI) throws Exception {
+		found.afficherCD();
+		this.traceMessage(found + "\n");
+		
 	}
 	
 	

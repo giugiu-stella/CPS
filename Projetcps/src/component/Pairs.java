@@ -8,11 +8,13 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import CVM.CVM;
+import boundPort.AsyncOutboundPort;
 import boundPort.CMInboundPort;
 import boundPort.CMOutboundPort;
 import boundPort.FacadeOutboundPort;
 import boundPort.NInboundPort;
 import boundPort.NOutboundPort;
+import connector.ConnectorAync;
 import connector.ConnectorCM;
 import connector.ConnectorN;
 import connector.ConnectorNM;
@@ -27,6 +29,9 @@ import fr.sorbonne_u.components.exceptions.ComponentShutdownException;
 import fr.sorbonne_u.components.exceptions.ComponentStartException;
 import interfaces.ContentManagementCI;
 import interfaces.ContentManagementImplementationI;
+import interfaces.FacadeContentManagementCI;
+import interfaces.FacadeContentManagementI;
+import interfaces.NodeAddressI;
 import interfaces.NodeCI;
 import interfaces.NodeManagementCI;
 import interfaces.node.ContentNodeAddressI;
@@ -37,10 +42,10 @@ import fr.sorbonne_u.utils.aclocks.ClocksServerCI;
 import fr.sorbonne_u.utils.aclocks.ClocksServerConnector;
 import fr.sorbonne_u.utils.aclocks.ClocksServerOutboundPort;
 
-@RequiredInterfaces(required = {NodeCI.class,ContentManagementCI.class,NodeManagementCI.class, ClocksServerCI.class})
+@RequiredInterfaces(required = {NodeCI.class,ContentManagementCI.class,NodeManagementCI.class, ClocksServerCI.class,FacadeContentManagementCI.class})
 @OfferedInterfaces(offered = {NodeCI.class,ContentManagementCI.class})
 
-public class Pairs extends AbstractComponent implements ContentManagementImplementationI {
+public class Pairs extends AbstractComponent implements ContentManagementImplementationI, FacadeContentManagementI{
 	public static final String Pip_URI=AbstractPort.generatePortURI();
 	protected FacadeOutboundPort fop;
 	protected NInboundPort Nip;
@@ -50,6 +55,7 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	private HashMap<PeerNodeAddressI, CMOutboundPort> listevoisins_CMop; //liste pour find et match
 	private HashMap<PeerNodeAddressI, NOutboundPort> listevoisins_Nop; 
 	protected ClocksServerOutboundPort csop;
+	protected AsyncOutboundPort aop;
 	
 	
 	protected Pairs(ContentDescriptor cd) throws Exception {
@@ -61,6 +67,9 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 		this.CMippair=new CMInboundPort(cd.getContentNodeAddress().getContentManagementURI(), this);
 		this.csop = new ClocksServerOutboundPort(this);
 		this.csop.publishPort();
+		
+		this.aop = new AsyncOutboundPort(this);
+		this.aop.publishPort();
 	}
 	
 	
@@ -85,6 +94,7 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 			this.Nip.unpublishPort();
 			this.CMippair.unpublishPort();
 			this.csop.unpublishPort();
+			this.aop.unpublishPort();
 		} catch (Exception e) {
 			throw new ComponentShutdownException(e);
 		}
@@ -247,5 +257,45 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 			this.listevoisins_CMop.put(p,CMop);
 			Nip.connect(contentNodeAddress.getContentNodeAddress());
 		}
+	}
+
+
+	@Override
+	public void find(ContentTemplateI cd, int hops, NodeAddressI requester, String requestURI)
+			throws Exception {
+
+	
+		if(this.contentNodeAddress.match(cd)) {
+			this.sendResult(this.contentNodeAddress, cd, requestURI);
+		}
+		
+		hops--;
+		if(hops !=0 && !(listevoisins_CMop.isEmpty())) {
+			for (Entry<PeerNodeAddressI,CMOutboundPort> e : listevoisins_CMop.entrySet()) {
+				  e.getValue().find(cd,hops,requester,requestURI);
+				  break;
+			}
+		}
+		
+	}
+	
+	protected void sendResult(ContentDescriptorI result,ContentTemplateI cd,String resultReceptionInboundPortURI) throws Exception{
+			
+			this.doPortConnection(
+					this.aop.getPortURI(),
+					resultReceptionInboundPortURI,
+					ConnectorAync.class.getCanonicalName());
+			
+			this.aop.acceptFound(result,resultReceptionInboundPortURI);
+			
+			this.doPortDisconnection(this.aop.getPortURI());
+		}
+
+
+	@Override
+	public void acceptFound(ContentDescriptorI found, String requestURI) throws Exception{
+		found.afficherCD();
+		this.traceMessage(found + "\n");
+		
 	}
 }

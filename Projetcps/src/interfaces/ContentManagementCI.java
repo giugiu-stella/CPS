@@ -9,7 +9,7 @@ import fr.sorbonne_u.components.interfaces.RequiredCI;
 
 public interface ContentManagementCI extends ContentManagementImplementationI,RequiredCI, OfferedCI {
 	@Override
-	public ContentDescriptorI find(ContentTemplateI cd, int hops) throws Exception;
+	public void find(ContentTemplateI cd, int hops,NodeAddressI requester, String requestURI) throws Exception;
 	@Override
 	public Set<ContentDescriptorI> match(ContentTemplateI cd,
 			Set<ContentDescriptorI> matched,int hops) throws Exception;

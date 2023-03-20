@@ -101,7 +101,7 @@ public class Client extends AbstractComponent{
 		System.out.println("Content Template que nous cherchons :");
 		System.out.println("--------------------------------------");
 		ct.afficherCD();
-		System.out.println(" "); 
+		/*System.out.println(" "); 
 		Set<ContentDescriptorI> cd=this.CMopclient.match(this.ct,new HashSet<>(), this.hops);
 		if(cd==null) {
 			System.out.println("null");
@@ -114,7 +114,9 @@ public class Client extends AbstractComponent{
 				System.out.println("----------------------------");
 				cdi.afficherCD();
 			}
-		}
+		}*/
+		
+		CMopclient.find(this.ct, hops,Facade.FNA,AbstractPort.generatePortURI());
 	}
 
 }

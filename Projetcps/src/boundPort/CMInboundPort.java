@@ -8,6 +8,7 @@ import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractInboundPort;
 import interfaces.ContentManagementCI;
 import interfaces.ContentManagementImplementationI;
+import interfaces.NodeAddressI;
 
 public class CMInboundPort extends AbstractInboundPort implements ContentManagementCI {
 		
@@ -44,6 +45,19 @@ public class CMInboundPort extends AbstractInboundPort implements ContentManagem
 				return ((ContentManagementImplementationI) getOwner()).match(cd,matched,hops) ;
 			}
 		}) ;
+	}
+
+	@Override
+	public void find(ContentTemplateI cd, int hops, NodeAddressI requester, String requestURI)
+			throws Exception {
+		this.getOwner().runTask(
+				o -> {	try {
+							((ContentManagementImplementationI)o).find(cd,hops, requester, requestURI);
+							
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					 });
 	}
 
 }
