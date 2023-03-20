@@ -111,7 +111,6 @@ public class ContentDescriptor extends ContentTemplate implements ContentDescrip
 		
 		if(!(cd.getInterpreters().isEmpty())) {
 			interpretes=true;
-			//System.out.println("Liste pb = "+ this.interpreters);
 			if ( getInterpreters()==null) {
 				return false;
 			}
@@ -119,7 +118,6 @@ public class ContentDescriptor extends ContentTemplate implements ContentDescrip
 		}
 		if(!(cd.getComposers().isEmpty())) {
 			compositeurs=true;
-			//System.out.println("Liste pb = "+ this.composers);
 			if ( getComposers()==null) {
 				return false;
 			}

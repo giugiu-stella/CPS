@@ -31,7 +31,7 @@ import interfaces.node.PeerNodeAddressI;
 
 public class Facade extends AbstractComponent implements ContentManagementImplementationI{
 	
-	public static final String FIP_URI="fip-uri";
+	public static final String FIP_URI=AbstractPort.generatePortURI();
 	public static final String FIP_URI_CM=AbstractPort.generatePortURI();
 	protected FacadeInboundPort fip;
 	private CMOutboundPort CMopfacade;
@@ -39,22 +39,24 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 	private Set<PeerNodeAddressI> liste_pairs;
 	private HashMap<PeerNodeAddressI, CMOutboundPort> liste_racine;
 	private int valeur=4;
+	CMOutboundPort cmop_join;
 	
 	protected Facade(ApplicationNodeAddress applicationNodeAddress) throws Exception{
 		super(1,0);
 		this.liste_pairs=new HashSet<PeerNodeAddressI>();
 		this.liste_racine= new HashMap<PeerNodeAddressI,CMOutboundPort>();
 		this.fip= new FacadeInboundPort(FIP_URI,this);
-		this.CMipfacade=new CMInboundPort(FIP_URI_CM,this);
 		this.fip.publishPort();
+		this.CMipfacade=new CMInboundPort(FIP_URI_CM,this);
 		this.CMipfacade.publishPort();
+		
 	}
 	
 	public synchronized void start() throws ComponentStartException {
 		try {
-			this.fip.publishPort();
 			this.CMopfacade= new CMOutboundPort(AbstractPort.generatePortURI(),this);
 			this.CMopfacade.publishPort();
+			System.out.println(CMopfacade.getPortURI());
 		} catch (Exception e) {
 			throw new ComponentStartException(e);
 		}
@@ -67,6 +69,7 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 			this.fip.unpublishPort();
 			this.CMipfacade.unpublishPort();
 			this.CMopfacade.unpublishPort();
+			this.cmop_join.unpublishPort();
 		} catch (Exception e) {
 			throw new ComponentShutdownException(e);
 		}
@@ -74,6 +77,7 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 	}
 	
 	public synchronized void finalise() throws Exception{
+		doPortDisconnection(this.cmop_join.getPortURI());
 		super.finalise();
 	}
 	
@@ -81,10 +85,10 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 		System.out.println("Je suis dans join de Facade...");
 		this.liste_pairs.add(a);
 		if(this.valeur==4) {
-			CMOutboundPort cmop_join=new CMOutboundPort(AbstractPort.generatePortURI(),this);
-			cmop_join.publishPort();
-			doPortConnection(cmop_join.getPortURI(),((ContentNodeAddressI)a).getContentManagementURI(),ConnectorCM.class.getCanonicalName());
-			this.liste_racine.put(a,cmop_join);
+			this.cmop_join=new CMOutboundPort(AbstractPort.generatePortURI(),this);
+			this.cmop_join.publishPort();
+			doPortConnection(this.cmop_join.getPortURI(),((ContentNodeAddressI)a).getContentManagementURI(),ConnectorCM.class.getCanonicalName());
+			this.liste_racine.put(a,this.cmop_join);
 			this.valeur=0;
 			System.out.println("liste_racine " +this.liste_racine);
 			return new HashSet<PeerNodeAddressI>(this.liste_pairs);
@@ -100,6 +104,7 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 		this.liste_pairs.remove(a);
 	}
 
+	
 	@Override
 	public ContentDescriptorI find(ContentTemplateI cd, int hops) throws Exception {
 		System.out.println("Je suis dans find de Facade...");
@@ -112,16 +117,14 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 		return null;
 	}
 	
+	
 	@Override
 	public Set<ContentDescriptorI> match(ContentTemplateI cd, Set<ContentDescriptorI> matched, int hops)
 			throws Exception {
 		System.out.println("Je suis dans match de Facade...");
 		for(Entry<PeerNodeAddressI,CMOutboundPort> e : liste_racine.entrySet()) {
 			Set<ContentDescriptorI> cdI=e.getValue().match(cd, matched,hops);
-			if(cdI!=null) {
-				return cdI;
-			}
-			
+			break;	
 		}
 		return matched;
 	}

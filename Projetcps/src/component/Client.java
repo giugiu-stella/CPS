@@ -34,7 +34,7 @@ public class Client extends AbstractComponent{
 	protected ClocksServerOutboundPort csop;
 	
 	protected Client(ContentTemplateI ct,int hops) throws Exception {
-		super(1,1);
+		super(1,1);// 1 pour les threads et 1 pour le schedule de l'horloge
 		this.ct= ct;
 		this.hops=hops;
 		this.CMopclient= new CMOutboundPort(AbstractPort.generatePortURI(),this);
@@ -55,6 +55,7 @@ public class Client extends AbstractComponent{
 	}
 	public void execute() throws Exception{
 		System.out.println("Je suis dans execute du Client...");
+		
 		this.doPortConnection(
 				this.csop.getPortURI(),
 				ClocksServer.STANDARD_INBOUNDPORT_URI,
@@ -70,7 +71,6 @@ public class Client extends AbstractComponent{
 					try {
 						((Client)o).action();
 					} catch (Exception e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				},

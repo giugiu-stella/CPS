@@ -26,7 +26,7 @@ public class CVM extends AbstractCVM {
 	protected static final boolean	DEBUG = true;										
 	protected ArrayList<HashMap<String,Object>> readTemplates;
 	protected ArrayList<HashMap<String,Object>> readDescriptors;
-	protected static final int HOPS = 3;
+	protected static final int HOPS = 3; // Hops doit être <= nombres de composants Pairs-1
 	protected static final long	DELAY_TO_START_IN_NANOS =TimeUnit.SECONDS.toNanos(5);
 	public static final String CLOCK_URI = "my-clock";
 	
@@ -60,6 +60,7 @@ public class CVM extends AbstractCVM {
 		AbstractComponent.createComponent(Client.class.getCanonicalName(),new Object[] {ct,1});
 		*/
 		
+		// horloge_accélération 
 		long unixEpochStartTimeInNanos =TimeUnit.MILLISECONDS.toNanos(System.currentTimeMillis())
 				+ CVM.DELAY_TO_START_IN_NANOS;
 		
@@ -69,16 +70,21 @@ public class CVM extends AbstractCVM {
 				new Object[]{CVM.CLOCK_URI, unixEpochStartTimeInNanos,
 							 startInstant, accelerationFactor});
 		
-
+			// récupération des Content Descriptor Test
 			this.readDescriptors=ContentDataManager.readDescriptors(1);
+			//créations des composants Pairs
 			for(HashMap<String,Object> hm:this.readDescriptors) {
 				ContentNodeAddress c = new ContentNodeAddress(AbstractPort.generatePortURI(), AbstractPort.generatePortURI(),AbstractPort.generatePortURI(), false,true);
 				ContentDescriptor cd = new ContentDescriptor(hm,c);
 				AbstractComponent.createComponent(Pairs.class.getCanonicalName(),new Object[] {cd});
 			}
+			
+			// création composant Facade
 			ApplicationNodeAddress a = new ApplicationNodeAddress(AbstractPort.generatePortURI(),AbstractPort.generatePortURI(), AbstractPort.generatePortURI(),true, false);
 			AbstractComponent.createComponent(Facade.class.getCanonicalName(), new Object[] {a});
 			
+			
+			//création composant Client
 			ContentTemplateI ct = new ContentTemplate("","Brandebourg Concertos", new HashSet<String>(), new HashSet<String>());
 			AbstractComponent.createComponent(Client.class.getCanonicalName(),new Object[] {ct,HOPS});
 			
@@ -88,7 +94,7 @@ public class CVM extends AbstractCVM {
 	public static void main(String[] args) {
 		try {
 			CVM c=new CVM();
-			c.startStandardLifeCycle(50000L);
+			c.startStandardLifeCycle(40000L);
 			Thread.sleep(5000L);
 			System.exit(0);
 		} catch(Exception e){

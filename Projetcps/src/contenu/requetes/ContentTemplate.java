@@ -69,6 +69,7 @@ public class ContentTemplate implements ContentTemplateI {
 	public Set<String> getComposers() {
 		return composers;
 	}
+	
 	public void afficherCD() {
 		System.out.println("titre : "+this.title);
 		System.out.println("titre de l'album : "+this.albumTitle);

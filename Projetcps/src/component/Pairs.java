@@ -38,21 +38,22 @@ import fr.sorbonne_u.utils.aclocks.ClocksServerConnector;
 import fr.sorbonne_u.utils.aclocks.ClocksServerOutboundPort;
 
 @RequiredInterfaces(required = {NodeCI.class,ContentManagementCI.class,NodeManagementCI.class, ClocksServerCI.class})
-@OfferedInterfaces(offered = {NodeCI.class})
+@OfferedInterfaces(offered = {NodeCI.class,ContentManagementCI.class})
+
 public class Pairs extends AbstractComponent implements ContentManagementImplementationI {
-	public static final String Pip_URI="pip-uri";
+	public static final String Pip_URI=AbstractPort.generatePortURI();
 	protected FacadeOutboundPort fop;
 	protected NInboundPort Nip;
 	private CMInboundPort CMippair;
 	private ContentDescriptor contentNodeAddress;
 	private Set<PeerNodeAddressI> listevoisins;
-	private HashMap<PeerNodeAddressI, CMOutboundPort> listevoisins_CMop;
-	private HashMap<PeerNodeAddressI, NOutboundPort> listevoisins_Nop;
+	private HashMap<PeerNodeAddressI, CMOutboundPort> listevoisins_CMop; //liste pour find et match
+	private HashMap<PeerNodeAddressI, NOutboundPort> listevoisins_Nop; 
 	protected ClocksServerOutboundPort csop;
 	
 	
 	protected Pairs(ContentDescriptor cd) throws Exception {
-		super(1,1);
+		super(1,1); // 1 pour les threads et 1 pour le schedule de l'horloge 
 		this.contentNodeAddress= cd;
 		this.listevoisins=new HashSet<PeerNodeAddressI>();
 		this.listevoisins_Nop= new HashMap<>();
@@ -79,6 +80,7 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	@Override
 	public synchronized void shutdown() throws ComponentShutdownException {
 		try {
+			
 			this.fop.unpublishPort();
 			this.Nip.unpublishPort();
 			this.CMippair.unpublishPort();
@@ -90,14 +92,16 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	}
 	
 	public synchronized void finalise() throws Exception{
-	
+	 
 		this.doPortDisconnection(this.csop.getPortURI());
 		
 		this.doPortDisconnection(this.fop.getPortURI());
 		
-		for(PeerNodeAddressI p: this.listevoisins) {
-			disconnect(p);
-		}
+		for (Entry<PeerNodeAddressI, CMOutboundPort> e : listevoisins_CMop.entrySet()) {
+				disconnect(e.getKey());
+				e.getValue().unpublishPort();
+				listevoisins_Nop.get(e.getKey()).unpublishPort();
+			}  	
 		super.finalise();
 	}
 	
@@ -214,7 +218,7 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 		System.out.println("hops "+ hops);
 		if(hops !=0 && !(listevoisins_CMop.isEmpty())) {
 			for (Entry<PeerNodeAddressI,CMOutboundPort> e : listevoisins_CMop.entrySet()) {
-				 System.out.println(e.getValue().match(cd,matched,hops)); // si on se stoppe ici => le pb est l'interblocage à régler 
+				 e.getValue().match(cd,matched,hops); // si on se stop ici => le pb est l'interblocage à régler 
 				  
 				  break;
 			}
