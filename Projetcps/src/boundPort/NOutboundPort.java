@@ -29,6 +29,24 @@ public class NOutboundPort extends AbstractOutboundPort implements NodeCI{
 		((NodeCI) getConnector()).disconnect(a);
 
 	}
+	@Override
+	public void acceptConnected(PeerNodeAddressI neighbour) throws Exception {
+		try {
+			((NodeCI)this.getConnector()).acceptConnected(neighbour);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+	}
+
+	@Override
+	public void connectAsync(PeerNodeAddressI neighbour) throws Exception {
+		((NodeCI)this.getConnector()).connectAsync(neighbour);
+
+		
+	}
+
+	
 
 	
 	

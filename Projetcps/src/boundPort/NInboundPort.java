@@ -1,10 +1,13 @@
 package boundPort;
 
+import java.util.concurrent.RejectedExecutionException;
+
 import component.Pairs;
 import fr.sorbonne_u.components.AbstractComponent;
 import fr.sorbonne_u.components.ComponentI;
 import fr.sorbonne_u.components.ports.AbstractInboundPort;
 import interfaces.NodeCI;
+import interfaces.NodeI;
 import interfaces.node.PeerNodeAddressI;
 
 public class NInboundPort extends AbstractInboundPort implements NodeCI {
@@ -42,6 +45,39 @@ public class NInboundPort extends AbstractInboundPort implements NodeCI {
 				return null;
 			}
 		}) ;
+	}
+	@Override
+	public void acceptConnected(PeerNodeAddressI neighbour) throws Exception {
+		try {
+			this.getOwner().runTask(
+					o -> {	try {
+								((NodeI)o).acceptConnected(neighbour);
+							} catch (Exception e) {
+								throw new RuntimeException(e);
+							}
+						 });
+	
+		} catch (RejectedExecutionException e) {
+			e.printStackTrace();
+		} catch (AssertionError e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}		
+		
+	}
+
+	@Override
+	public void connectAsync(PeerNodeAddressI neighbour) throws Exception {
+		this.getOwner().runTask(
+				o -> {	try {
+							((NodeI)o).connectAsync(neighbour);
+							
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					 });
+		
 	}
 
 

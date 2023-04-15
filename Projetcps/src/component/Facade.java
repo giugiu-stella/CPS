@@ -149,6 +149,28 @@ public class Facade extends AbstractComponent implements ContentManagementImplem
 		this.traceMessage(found + "\n");
 		
 	}
+
+	@Override
+	public void match(ContentTemplateI cd, int hops, NodeAddressI requester, String requestURI,
+			Set<ContentDescriptorI> matched) throws Exception {
+		System.out.println("Je suis dans match asynchrone de Facade...");
+		for(Entry<PeerNodeAddressI,CMOutboundPort> e : liste_racine.entrySet()) {
+			e.getValue().match(cd, hops,requester,requestURI,matched);
+			break;
+		}
+			
+	}
+
+	@Override
+	public void acceptMatched(Set<ContentDescriptorI> found, String requestURI) throws Exception {
+		System.out.println("Je suis dans Matched de Facade...");
+		for(ContentDescriptorI i : found) {
+			i.afficherCD();
+		}
+		
+		this.traceMessage(found + "\n");
+		
+	}
 	
 	
 }

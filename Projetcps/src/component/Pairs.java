@@ -33,6 +33,7 @@ import interfaces.FacadeContentManagementCI;
 import interfaces.FacadeContentManagementI;
 import interfaces.NodeAddressI;
 import interfaces.NodeCI;
+import interfaces.NodeI;
 import interfaces.NodeManagementCI;
 import interfaces.node.ContentNodeAddressI;
 import interfaces.node.PeerNodeAddressI;
@@ -45,7 +46,7 @@ import fr.sorbonne_u.utils.aclocks.ClocksServerOutboundPort;
 @RequiredInterfaces(required = {NodeCI.class,ContentManagementCI.class,NodeManagementCI.class, ClocksServerCI.class,FacadeContentManagementCI.class})
 @OfferedInterfaces(offered = {NodeCI.class,ContentManagementCI.class})
 
-public class Pairs extends AbstractComponent implements ContentManagementImplementationI, FacadeContentManagementI{
+public class Pairs extends AbstractComponent implements ContentManagementImplementationI, FacadeContentManagementI,NodeI{
 	public static final String Pip_URI=AbstractPort.generatePortURI();
 	protected FacadeOutboundPort fop;
 	protected NInboundPort Nip;
@@ -89,7 +90,6 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	@Override
 	public synchronized void shutdown() throws ComponentShutdownException {
 		try {
-			
 			this.fop.unpublishPort();
 			this.Nip.unpublishPort();
 			this.CMippair.unpublishPort();
@@ -246,17 +246,20 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 				continue;
 			}
 			System.out.println(p.toString());
-			NOutboundPort Nip;
-			Nip= new NOutboundPort(AbstractPort.generatePortURI(),this);
-			Nip.publishPort();
-			this.doPortConnection(Nip.getPortURI(),p.getNodeURI(),ConnectorN.class.getCanonicalName());
+			NOutboundPort Nop;
+			Nop= new NOutboundPort(AbstractPort.generatePortURI(),this);
+			Nop.publishPort();
+			this.doPortConnection(Nop.getPortURI(),p.getNodeURI(),ConnectorN.class.getCanonicalName());
 			CMOutboundPort CMop=new CMOutboundPort(AbstractPort.generatePortURI(),this);
 			CMop.publishPort();
 			this.doPortConnection(CMop.getPortURI(),((ContentNodeAddressI)p).getContentManagementURI(),ConnectorCM.class.getCanonicalName());
-			this.listevoisins_Nop.put(p,Nip);
+			this.listevoisins_Nop.put(p,Nop);
 			this.listevoisins_CMop.put(p,CMop);
-			Nip.connect(contentNodeAddress.getContentNodeAddress());
+			System.out.println("listevoisins_CMop =");
+			System.out.println(listevoisins_CMop);
+			Nop.connectAsync(contentNodeAddress.getContentNodeAddress());
 		}
+		
 	}
 
 
@@ -287,7 +290,6 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 					ConnectorAync.class.getCanonicalName());
 			
 			this.aop.acceptFound(result,resultReceptionInboundPortURI);
-			
 			this.doPortDisconnection(this.aop.getPortURI());
 		}
 
@@ -296,6 +298,74 @@ public class Pairs extends AbstractComponent implements ContentManagementImpleme
 	public void acceptFound(ContentDescriptorI found, String requestURI) throws Exception{
 		found.afficherCD();
 		this.traceMessage(found + "\n");
+		
+	}
+
+
+	@Override
+	public void match(ContentTemplateI cd, int hops, NodeAddressI requester, String requestURI,
+			Set<ContentDescriptorI> matched) throws Exception {
+		System.out.println("Je suis dans match asynchrone de Pairs...");
+		if(this.contentNodeAddress.match(cd)) {
+			matched.add(this.contentNodeAddress);
+		}
+		
+		
+		hops--;
+		System.out.println(listevoisins_CMop);
+		System.out.println("hops "+ hops);
+		if(hops !=0 && !(listevoisins_CMop.isEmpty())) {
+			for (Entry<PeerNodeAddressI,CMOutboundPort> e : listevoisins_CMop.entrySet()) {
+				 e.getValue().match(cd,hops,requester,requestURI,matched); 
+				  
+				  break;
+			}
+		
+		}
+		if(hops==0) {
+			this.sendResultMatch(matched, cd, requestURI);
+		}
+		
+	}
+	protected void sendResultMatch(Set<ContentDescriptorI> result,ContentTemplateI cd,String resultReceptionInboundPortURI) throws Exception{
+		System.out.println("Je suis dans sendResultMatch...");
+		this.doPortConnection(this.aop.getPortURI(),resultReceptionInboundPortURI,ConnectorAync.class.getCanonicalName());
+		this.aop.acceptMatched(result,resultReceptionInboundPortURI);
+		this.doPortDisconnection(this.aop.getPortURI());
+	}
+
+
+	@Override
+	public void acceptMatched(Set<ContentDescriptorI> found, String requestURI) throws Exception {
+		System.out.println("Je suis dans AcceptMatched de Pairs...");
+		for(ContentDescriptorI i : found) {
+			i.afficherCD();
+		}
+		
+		this.traceMessage(found + "\n");
+		
+	}
+	@Override
+	public void acceptConnected(PeerNodeAddressI neighbour) throws Exception {
+		System.out.println("Je suis dans acceptConnected...");
+		System.out.println("OUI JE LE VEUX !!");
+	}
+
+
+	@Override
+	public void connectAsync(PeerNodeAddressI peer) throws Exception {
+		System.out.println("je suis dans connect asynchrone de Pairs...");
+		NOutboundPort Nip2;
+		Nip2= new NOutboundPort(AbstractPort.generatePortURI(),this);
+		Nip2.publishPort();
+		CMOutboundPort CMop2=new CMOutboundPort(AbstractPort.generatePortURI(),this);
+		CMop2.publishPort();
+		acceptConnected(peer);
+		this.doPortConnection(CMop2.getPortURI(),((ContentNodeAddressI)peer).getContentManagementURI(),ConnectorCM.class.getCanonicalName());
+		this.doPortConnection(Nip2.getPortURI(),peer.getNodeURI(),ConnectorN.class.getCanonicalName());
+		this.listevoisins_Nop.put(peer,Nip2);
+		this.listevoisins_CMop.put(peer,CMop2);
+		
 		
 	}
 }

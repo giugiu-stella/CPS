@@ -17,6 +17,19 @@ public class ConnectorN extends AbstractConnector implements NodeCI {
 		((NodeCI)this.offering).disconnect(a);
 	}
 
+	@Override
+	public void acceptConnected(PeerNodeAddressI neighbour) throws Exception {
+		((NodeCI)this.offering).acceptConnected(neighbour);
+		
+	}
+
+	@Override
+	public void connectAsync(PeerNodeAddressI neighbour) throws Exception {
+		((NodeCI)this.offering).connectAsync(neighbour);
+		
+	}
+
+
 	
 
 }

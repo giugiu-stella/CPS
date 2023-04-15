@@ -41,4 +41,11 @@ public class CMOutboundPort extends AbstractOutboundPort implements ContentManag
 
 	}
 
+	@Override
+	public void match(ContentTemplateI cd, int hops, NodeAddressI requester, String requestURI,
+			Set<ContentDescriptorI> matched) throws Exception {
+		((ContentManagementCI)this.getConnector()).match(cd,hops,requester,requestURI, matched);
+		
+	}
+
 }

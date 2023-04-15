@@ -28,4 +28,11 @@ public class ConnectorCM extends AbstractConnector implements ContentManagementC
 		
 	}
 
+	@Override
+	public void match(ContentTemplateI cd, int hops, NodeAddressI requester, String requestURI,
+			Set<ContentDescriptorI> matched) throws Exception {
+		((ContentManagementCI)this.offering).match(cd,hops,requester,requestURI, matched);
+		
+	}
+
 }

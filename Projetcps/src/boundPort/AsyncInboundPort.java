@@ -1,5 +1,6 @@
 package boundPort;
 
+import java.util.Set;
 import java.util.concurrent.RejectedExecutionException;
 
 import contenu.requetes.ContentDescriptorI;
@@ -39,6 +40,27 @@ public class AsyncInboundPort extends AbstractInboundPort implements FacadeConte
 		} catch (Exception e) {
 			e.printStackTrace();
 		}		
+	}
+
+	@Override
+	public void acceptMatched(Set<ContentDescriptorI> found, String requestURI) throws Exception {
+		try {
+			this.getOwner().runTask(
+					o -> {	try {
+								((FacadeContentManagementI)o).
+										acceptMatched(found, requestURI);
+							} catch (Exception e) {
+								throw new RuntimeException(e);
+							}
+						 });
+		} catch (RejectedExecutionException e) {
+			e.printStackTrace();
+		} catch (AssertionError e) {
+			e.printStackTrace();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}		
+		
 	}
 
 

@@ -60,4 +60,18 @@ public class CMInboundPort extends AbstractInboundPort implements ContentManagem
 					 });
 	}
 
+	@Override
+	public void match(ContentTemplateI cd, int hops, NodeAddressI requester, String requestURI,
+			Set<ContentDescriptorI> matched) throws Exception {
+		this.getOwner().runTask(
+				o -> {	try {
+							((ContentManagementImplementationI)o).match(cd,hops, requester, requestURI, matched);
+							
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					 });
+		
+	}
+
 }
